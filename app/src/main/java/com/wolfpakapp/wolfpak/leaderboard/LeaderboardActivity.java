@@ -1,12 +1,13 @@
-package com.wolfpakapp.wolfpak;
+package com.wolfpakapp.wolfpak.leaderboard;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+
+import com.wolfpakapp.wolfpak.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class LeaderboardActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_leaderboard);
 
-        ListView listview = (ListView) findViewById(R.id.leaderboardlistview);
+        RecyclerView leaderboardRecyclerView = (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
 
         List<LeaderboardListItem> itemList = new ArrayList<LeaderboardListItem>();
         for (int idx = 0; idx < ITEM_COUNT; idx++) {
@@ -29,9 +30,9 @@ public class LeaderboardActivity extends ActionBarActivity {
             itemList.add(item);
         }
 
-        LeaderboardAdapter adapter = new LeaderboardAdapter(this, itemList);
+        leaderboardRecyclerView.setHasFixedSize(true);
 
-        listview.setAdapter(adapter);
+        leaderboardRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
     @Override

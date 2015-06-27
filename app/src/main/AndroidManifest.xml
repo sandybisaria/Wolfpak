@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LeaderboardActivity"
+            android:name=".leaderboard.LeaderboardActivity"
             android:label="@string/title_activity_leaderboard" >
         </activity>
     </application>

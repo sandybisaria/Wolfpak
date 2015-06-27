@@ -1,4 +1,4 @@
-package com.wolfpakapp.wolfpak;
+package com.wolfpakapp.wolfpak.leaderboard;
 
 public class LeaderboardListItem {
     private int id;
