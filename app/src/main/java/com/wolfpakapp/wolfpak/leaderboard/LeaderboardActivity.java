@@ -26,7 +26,7 @@ public class LeaderboardActivity extends ActionBarActivity {
 
         List<LeaderboardListItem> listItems = new ArrayList<LeaderboardListItem>();
         for (int idx = 0; idx < ITEM_COUNT; idx++) {
-            LeaderboardListItem item = new LeaderboardListItem(idx, "It's a Wolfpak Party!");
+            LeaderboardListItem item = new LeaderboardListItem(idx, "It's a Wolfpak Party!", 1);
             listItems.add(item);
         }
 

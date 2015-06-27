@@ -26,6 +26,14 @@
             android:text="@string/hello_world"
             android:id="@+id/leaderboard_item_text_view" />
 
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:background="@drawable/leaderboard_item_view_count_background"
+            android:id="@+id/leaderboard_item_view_count_text_view" />
+
     </LinearLayout>
 
 

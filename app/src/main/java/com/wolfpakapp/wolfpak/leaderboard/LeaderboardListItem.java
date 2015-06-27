@@ -2,23 +2,21 @@ package com.wolfpakapp.wolfpak.leaderboard;
 
 public class LeaderboardListItem {
     private int id;
-    private String content;
+    private String contentString;
+    private int voteCount;
 
-    public LeaderboardListItem() {
-
-    }
-
-    public LeaderboardListItem(int id, String content) {
+    public LeaderboardListItem(int id, String contentString, int voteCount) {
         this.id = id;
-        this.content = content;
+        this.contentString = contentString;
+        this.voteCount = voteCount;
     }
 
-    public String getContent() {
-        return content;
+    public String getContentString() {
+        return contentString;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setContentString(String contentString) {
+        this.contentString = contentString;
     }
 
     public int getId() {
@@ -27,5 +25,13 @@ public class LeaderboardListItem {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getVoteCount() {
+        return voteCount;
+    }
+
+    public void setVoteCount(int voteCount) {
+        this.voteCount = voteCount;
     }
 }
