@@ -24,15 +24,18 @@ public class LeaderboardActivity extends ActionBarActivity {
 
         RecyclerView leaderboardRecyclerView = (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
 
-        List<LeaderboardListItem> itemList = new ArrayList<LeaderboardListItem>();
+        List<LeaderboardListItem> listItems = new ArrayList<LeaderboardListItem>();
         for (int idx = 0; idx < ITEM_COUNT; idx++) {
             LeaderboardListItem item = new LeaderboardListItem(idx, "It's a Wolfpak Party!");
-            itemList.add(item);
+            listItems.add(item);
         }
+
+        LeaderboardAdapter leaderboardAdapter = new LeaderboardAdapter(listItems);
 
         leaderboardRecyclerView.setHasFixedSize(true);
 
         leaderboardRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        leaderboardRecyclerView.setAdapter(leaderboardAdapter);
     }
 
     @Override
