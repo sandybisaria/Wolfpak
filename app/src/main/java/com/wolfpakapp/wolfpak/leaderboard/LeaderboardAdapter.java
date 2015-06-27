@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.wolfpakapp.wolfpak.R;
 
@@ -24,10 +25,15 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.leaderboard_list_item, parent, false);
 
-        ViewHolder viewHolder = new ViewHolder(view);
+        ViewHolder viewHolder = new ViewHolder(view, new LeaderboardAdapter.ViewHolder.LeaderboardViewHolderOnClickListener() {
+            @Override
+            public void onImageViewClick(ImageView imageView) {
+                Toast.makeText(imageView.getContext(), "You clicked the image!", Toast.LENGTH_SHORT).show();
+            }
+        });
         return viewHolder;
     }
 
@@ -37,22 +43,40 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         holder.bindListItem(listItem);
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private LeaderboardListItem listItem;
+
         private ImageView listItemImageView;
         private TextView listItemTextView;
 
-        public ViewHolder(View view) {
+        private LeaderboardViewHolderOnClickListener leaderboardOnCLickListener;
+
+        public ViewHolder(View view, LeaderboardViewHolderOnClickListener listener) {
             super(view);
+
+            leaderboardOnCLickListener = listener;
 
             listItemImageView = (ImageView) view.findViewById(R.id.leaderboard_item_image_view);
             listItemTextView = (TextView) view.findViewById(R.id.leaderboard_item_text_view);
+
+            listItemImageView.setOnClickListener(this);
         }
 
         public void bindListItem(LeaderboardListItem listItem) {
             this.listItem = listItem;
 
             listItemTextView.setText(listItem.getContent());
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (view instanceof ImageView) {
+                leaderboardOnCLickListener.onImageViewClick((ImageView) view);
+            }
+        }
+
+        public interface LeaderboardViewHolderOnClickListener {
+            void onImageViewClick(ImageView imageView);
         }
     }
 }

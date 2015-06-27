@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:layout_margin="5dp"
+    android:layout_height="match_parent" android:layout_margin="7dp"
     android:background="@drawable/leaderboard_item_background">
 
     <ImageView
         android:layout_width="@dimen/leaderboarditem_preview_size"
         android:layout_height="@dimen/leaderboarditem_preview_size"
         android:contentDescription="Insert image here"
-        android:layout_margin="5dp"
+        android:layout_margin="7dp"
+        android:scaleType="centerCrop"
         android:src="@drawable/wolfpaktest"
         android:id="@+id/leaderboard_item_image_view" />
 
