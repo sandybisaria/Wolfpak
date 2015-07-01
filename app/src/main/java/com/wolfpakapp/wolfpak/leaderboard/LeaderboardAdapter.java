@@ -45,12 +45,21 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         private TextView listItemTextView;
         private TextView listItemViewCountTextView;
 
+        private ViewCountOnTouchListener mListener;
+
+        private float initialViewX;
+        private float initialViewY;
+
         public ViewHolder(View view) {
             super(view);
 
             listItemImageView = (ImageView) view.findViewById(R.id.leaderboard_item_image_view);
             listItemTextView = (TextView) view.findViewById(R.id.leaderboard_item_text_view);
             listItemViewCountTextView = (TextView) view.findViewById(R.id.leaderboard_item_view_count_text_view);
+
+            mListener = new ViewCountOnTouchListener();
+
+            listItemViewCountTextView.setOnTouchListener(mListener);
         }
 
         public void bindListItem(LeaderboardListItem listItem) {
@@ -58,6 +67,78 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             listItemTextView.setText(listItem.getContentString());
             listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
+        }
+
+        private final class ViewCountOnTouchListener implements View.OnTouchListener {
+            private int activePointerId = MotionEvent.INVALID_POINTER_ID;
+            float lastTouchX = 0;
+            float lastTouchY = 0;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                final int action = MotionEventCompat.getActionMasked(event);
+
+                switch (action) {
+                    case MotionEvent.ACTION_DOWN: {
+                        final int pointerIndex = MotionEventCompat.getActionIndex(event);
+                        final float x = MotionEventCompat.getX(event, pointerIndex);
+                        final float y = MotionEventCompat.getY(event, pointerIndex);
+
+                        lastTouchX = x;
+                        lastTouchY = y;
+
+                        activePointerId = MotionEventCompat.getPointerId(event, 0);
+
+                        v.getParent().requestDisallowInterceptTouchEvent(true);
+
+                        initialViewX = v.getX();
+                        initialViewY = v.getY();
+
+                        break;
+                    }
+                    case MotionEvent.ACTION_MOVE: {
+                        final int pointerIndex = MotionEventCompat.findPointerIndex(event, activePointerId);
+                        final float x = MotionEventCompat.getX(event, pointerIndex);
+                        final float y = MotionEventCompat.getY(event, pointerIndex);
+
+                        final float dx = x - lastTouchX;
+                        final float dy = y - lastTouchY;
+
+                        v.setX(v.getX() + dx);
+                        v.setY(v.getY() + dy);
+
+                        v.invalidate();
+
+                        lastTouchX = x;
+                        lastTouchY = y;
+
+                        break;
+                    }
+                    case MotionEvent.ACTION_POINTER_UP: {
+                        final int pointerIndex = MotionEventCompat.getActionIndex(event);
+                        final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
+                        if (pointerId == activePointerId) {
+                            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                            lastTouchX = MotionEventCompat.getX(event, newPointerIndex);
+                            lastTouchY = MotionEventCompat.getY(event, newPointerIndex);
+                            activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
+                        }
+
+                        break;
+                    }
+
+                    case MotionEvent.ACTION_CANCEL:
+                    case MotionEvent.ACTION_UP: {
+                        activePointerId = MotionEvent.INVALID_POINTER_ID;
+
+                        v.setX(initialViewX);
+                        v.setY(initialViewY);
+                    }
+                }
+
+                return true;
+            }
         }
     }
 }
