@@ -1,6 +1,6 @@
 package com.wolfpakapp.wolfpak.leaderboard;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class LeaderboardActivity extends ActionBarActivity {
+public class LeaderboardActivity extends Activity {
 
     final int ITEM_COUNT = 15;
 
@@ -24,7 +24,7 @@ public class LeaderboardActivity extends ActionBarActivity {
 
         RecyclerView leaderboardRecyclerView = (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
 
-        List<LeaderboardListItem> listItems = new ArrayList<LeaderboardListItem>();
+        List<LeaderboardListItem> listItems = new ArrayList<>();
         for (int idx = 0; idx < ITEM_COUNT; idx++) {
             LeaderboardListItem item = new LeaderboardListItem(idx, "It's a Wolfpak Party!", 1);
             listItems.add(item);
