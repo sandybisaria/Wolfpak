@@ -1,8 +1,17 @@
 package com.wolfpakapp.wolfpak.leaderboard;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.app.Activity;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,6 +27,11 @@ import java.util.List;
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
     private List<LeaderboardListItem> listItems;
     private static RecyclerView recyclerView;
+
+    private static Animator mCurrentAnimator;
+    private static int mAnimationDuration;
+
+    private static final OvershootInterpolator mInterpolator = new OvershootInterpolator(1.4f);
 
     public LeaderboardAdapter(List<LeaderboardListItem> listItems) {
         this.listItems = listItems;
@@ -44,7 +58,10 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
+
         this.recyclerView = recyclerView;
+
+        mAnimationDuration = 1000;
     }
 
     public static final RecyclerView.ChildDrawingOrderCallback defaultCallback = new RecyclerView.ChildDrawingOrderCallback() {
@@ -72,11 +89,15 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             listItemTextView = (TextView) view.findViewById(R.id.leaderboard_item_text_view);
             listItemViewCountTextView = (TextView) view.findViewById(R.id.leaderboard_item_view_count_text_view);
 
+            listItemImageView.setOnClickListener(new ImageViewOnClickListener());
             listItemViewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
         }
 
         public void bindListItem(LeaderboardListItem listItem) {
             this.listItem = listItem;
+
+            listItemImageView.setImageResource(listItem.getImageSource());
+            listItemImageView.setCropToPadding(true);
 
             listItemTextView.setText(listItem.getContentString());
             listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
@@ -180,8 +201,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         xAnim.setDuration(350);
                         yAnim.setDuration(350);
 
-                        xAnim.setInterpolator(new OvershootInterpolator(1.4f));
-                        yAnim.setInterpolator(new OvershootInterpolator(1.4f));
+                        xAnim.setInterpolator(mInterpolator);
+                        yAnim.setInterpolator(mInterpolator);
 
                         xAnim.start();
                         yAnim.start();
@@ -191,6 +212,152 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 }
 
                 return true;
+            }
+        }
+
+        private final class ImageViewOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                final View imgView = v;
+                Activity mActivity = (Activity)imgView.getContext();
+
+                if (mCurrentAnimator != null) {
+                    mCurrentAnimator.cancel();
+                }
+
+                final ImageView expandedImageView = (ImageView) mActivity.findViewById(R.id.leaderboard_expanded_image_view);
+                expandedImageView.setImageResource(listItem.getImageSource());
+
+                final Rect startBounds = new Rect();
+                final Rect finalBounds = new Rect();
+                final Point globalOffset = new Point();
+
+                imgView.getGlobalVisibleRect(startBounds);
+                mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
+                startBounds.offset(-globalOffset.x, -globalOffset.y);
+                finalBounds.offset(-globalOffset.x, -globalOffset.y);
+
+                float startScale;
+                if ((float) finalBounds.width() / finalBounds.height()
+                        > (float) startBounds.width() / startBounds.height()) {
+                    // Extend start bounds horizontally
+                    startScale = (float) startBounds.height() / finalBounds.height();
+                    float startWidth = startScale * finalBounds.width();
+                    float deltaWidth = (startWidth - startBounds.width()) / 2;
+                    startBounds.left -= deltaWidth;
+                    startBounds.right += deltaWidth;
+                } else {
+                    // Extend start bounds vertically
+                    startScale = (float) startBounds.width() / finalBounds.width();
+                    float startHeight = startScale * finalBounds.height();
+                    float deltaHeight = (startHeight - startBounds.height()) / 2;
+                    startBounds.top -= deltaHeight;
+                    startBounds.bottom += deltaHeight;
+                }
+
+                imgView.setAlpha(0f);
+                expandedImageView.setVisibility(ImageView.VISIBLE);
+
+                expandedImageView.setPivotX(0f);
+                expandedImageView.setPivotY(0f);
+
+                AnimatorSet set = new AnimatorSet();
+                set
+                        .play(ObjectAnimator.ofFloat(expandedImageView, View.X,
+                                startBounds.left, finalBounds.left))
+                        .with(ObjectAnimator.ofFloat(expandedImageView, View.Y,
+                                startBounds.top, finalBounds.top))
+                        .with(ObjectAnimator.ofFloat(expandedImageView, View.SCALE_X,
+                                startScale, 1f)).with(ObjectAnimator.ofFloat(expandedImageView,
+                        View.SCALE_Y, startScale, 1f));
+                set.setDuration(mAnimationDuration);
+                set.setInterpolator(mInterpolator);
+                set.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        mCurrentAnimator = null;
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        mCurrentAnimator = null;
+                    }
+                });
+
+                Integer colorFrom = 0x00ffffff;//recyclerView.getResources().getColor(android.R.color.white);
+                Integer colorTo = 0xff000000;//recyclerView.getResources().getColor(android.R.color.black);
+                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
+                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animator) {
+                        expandedImageView.setBackgroundColor((Integer)animator.getAnimatedValue());
+                    }
+
+                });
+                colorAnimation.setDuration(mAnimationDuration);
+
+                colorAnimation.start();
+                set.start();
+                mCurrentAnimator = set;
+
+                final float startScaleFinal = startScale;
+                expandedImageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (mCurrentAnimator != null) {
+                            mCurrentAnimator.cancel();
+                        }
+
+                        AnimatorSet set = new AnimatorSet();
+                        set.play(ObjectAnimator
+                                .ofFloat(expandedImageView, View.X, startBounds.left))
+                                .with(ObjectAnimator
+                                        .ofFloat(expandedImageView,
+                                                View.Y,startBounds.top))
+                                .with(ObjectAnimator
+                                        .ofFloat(expandedImageView,
+                                                View.SCALE_X, startScaleFinal))
+                                .with(ObjectAnimator
+                                        .ofFloat(expandedImageView,
+                                                View.SCALE_Y, startScaleFinal));
+                        set.setDuration(mAnimationDuration);
+                        set.setInterpolator(mInterpolator);
+                        set.addListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                imgView.setAlpha(1f);
+                                expandedImageView.setVisibility(View.GONE);
+                                mCurrentAnimator = null;
+                            }
+
+                            @Override
+                            public void onAnimationCancel(Animator animation) {
+                                imgView.setAlpha(1f);
+                                expandedImageView.setVisibility(View.GONE);
+                                mCurrentAnimator = null;
+                            }
+                        });
+                        Integer colorFrom = 0xff000000;//recyclerView.getResources().getColor(android.R.color.black);
+                        Log.d("BLACK", Integer.toHexString(colorFrom));
+                        Integer colorTo = 0x00ffffff;//recyclerView.getResources().getColor(android.R.color.white);
+                        Log.d("WHITE", Integer.toHexString(colorTo));
+                        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
+                        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+                            @Override
+                            public void onAnimationUpdate(ValueAnimator animator) {
+                                expandedImageView.setBackgroundColor((Integer)animator.getAnimatedValue());
+                            }
+
+                        });
+                        colorAnimation.setDuration(mAnimationDuration);
+
+                        colorAnimation.start();
+                        set.start();
+                        mCurrentAnimator = set;
+                    }
+                });
             }
         }
     }

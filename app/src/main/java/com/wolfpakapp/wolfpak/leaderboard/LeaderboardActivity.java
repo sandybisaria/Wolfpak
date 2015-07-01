@@ -6,6 +6,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.FrameLayout;
 
 import com.wolfpakapp.wolfpak.R;
 
@@ -26,7 +27,12 @@ public class LeaderboardActivity extends Activity {
 
         List<LeaderboardListItem> listItems = new ArrayList<>();
         for (int idx = 0; idx < ITEM_COUNT; idx++) {
-            LeaderboardListItem item = new LeaderboardListItem(idx, "It's a Wolfpak Party!", 1);
+            int img;
+            if (idx % 2 == 0)
+                img = R.drawable.realtest;
+            else
+                img = R.drawable.wolfpaktest;
+            LeaderboardListItem item = new LeaderboardListItem(idx, "It's a Wolfpak Party!", 1, img);
             listItems.add(item);
         }
 

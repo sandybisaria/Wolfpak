@@ -4,11 +4,13 @@ public class LeaderboardListItem {
     private int id;
     private String contentString;
     private int voteCount;
+    private int imageSource;
 
-    public LeaderboardListItem(int id, String contentString, int voteCount) {
+    public LeaderboardListItem(int id, String contentString, int voteCount, int imageSource) {
         this.id = id;
         this.contentString = contentString;
         this.voteCount = voteCount;
+        this.imageSource = imageSource;
     }
 
     public String getContentString() {
@@ -33,5 +35,13 @@ public class LeaderboardListItem {
 
     public void setVoteCount(int voteCount) {
         this.voteCount = voteCount;
+    }
+
+    public int getImageSource() {
+        return imageSource;
+    }
+
+    public void setImageSource(int imageSource) {
+        this.imageSource = imageSource;
     }
 }

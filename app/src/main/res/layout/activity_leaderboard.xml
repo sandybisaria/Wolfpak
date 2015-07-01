@@ -1,10 +1,9 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="5dp"
     android:background="@color/leaderboard_background_grey"
     tools:context="com.wolfpakapp.wolfpak.leaderboard.LeaderboardActivity"
-    android:clipChildren="false">
+    android:clipChildren="false" android:id="@+id/leaderboard_frame_layout">
 
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
@@ -13,4 +12,12 @@
         android:id="@+id/leaderboard_recycler_view"
         android:clipChildren="false"/>
 
-</RelativeLayout>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:visibility="invisible"
+        android:contentDescription="Expanded image"
+        android:id="@+id/leaderboard_expanded_image_view"/>
+
+</FrameLayout>
