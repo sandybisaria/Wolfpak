@@ -9,10 +9,7 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.Shape;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -177,9 +174,17 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                         GradientDrawable bg = (GradientDrawable) v.getResources().getDrawable(R.drawable.leaderboard_item_view_count_background);
                         if (v.getY() < initialViewY) {
-                            bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_green));
+                            if (listItem.getStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
+                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_grey));
+                            } else {
+                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_green));
+                            }
                         } else if (v.getY() > initialViewY) {
-                            bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_red));
+                            if (listItem.getStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
+                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_grey));
+                            } else {
+                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_red));
+                            }
                         }
                         v.setBackground(bg);
                         v.invalidate();
@@ -204,6 +209,24 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP: {
+                        GradientDrawable bg = (GradientDrawable) v.getResources().getDrawable(R.drawable.leaderboard_item_view_count_background);
+                        if (v.getY() < initialViewY) {
+                            if (listItem.getStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
+                                listItem.setStatus(LeaderboardListItem.VoteStatus.NOT_VOTED);
+                            } else {
+                                listItem.setStatus(LeaderboardListItem.VoteStatus.UPVOTED);
+                            }
+                        } else if (v.getY() > initialViewY) {
+                            if (listItem.getStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
+                                listItem.setStatus(LeaderboardListItem.VoteStatus.NOT_VOTED);
+                            } else {
+                                listItem.setStatus(LeaderboardListItem.VoteStatus.DOWNVOTED);
+                            }
+                        }
+                        v.setBackground(bg);
+                        listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
+                        v.invalidate();
+
                         activePointerId = MotionEvent.INVALID_POINTER_ID;
 
                         ObjectAnimator xAnim = ObjectAnimator.ofFloat(v, "X", v.getX(), initialViewX);

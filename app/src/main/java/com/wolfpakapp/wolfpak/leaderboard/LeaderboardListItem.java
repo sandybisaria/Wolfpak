@@ -5,6 +5,7 @@ import java.util.Enumeration;
 public class LeaderboardListItem {
     private int id;
     private String contentString;
+    private final int originalVoteCount;
     private int voteCount;
     private int imageSource;
     private VoteStatus status;
@@ -13,13 +14,19 @@ public class LeaderboardListItem {
     public LeaderboardListItem(int id, String contentString, int voteCount, int imageSource) {
         this.id = id;
         this.contentString = contentString;
+        originalVoteCount = voteCount;
         this.voteCount = voteCount;
         this.imageSource = imageSource;
         this.status = VoteStatus.NOT_VOTED;
     }
 
     public enum VoteStatus {
-        NOT_VOTED, UPVOTED, DOWNVOTED
+        NOT_VOTED(0), UPVOTED(1), DOWNVOTED(-1);
+        public final int change;
+
+        private VoteStatus(int change) {
+            this.change = change;
+        }
     }
 
     public String getContentString() {
@@ -59,6 +66,11 @@ public class LeaderboardListItem {
     }
 
     public void setStatus(VoteStatus status) {
+        voteCount = originalVoteCount + status.change;
         this.status = status;
+    }
+
+    public int getOriginalVoteCount() {
+        return originalVoteCount;
     }
 }
