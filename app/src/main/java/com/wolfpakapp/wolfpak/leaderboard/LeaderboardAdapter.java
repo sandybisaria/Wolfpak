@@ -27,12 +27,11 @@ import java.util.List;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
     private List<LeaderboardListItem> listItems;
-    private static RecyclerView recyclerView;
+    private RecyclerView recyclerView;
 
-    private static Animator mCurrentAnimator;
-    private static int mAnimationDuration;
-
-    private static final OvershootInterpolator mInterpolator = new OvershootInterpolator(1.4f);
+    private Animator mCurrentAnimator;
+    private final int mAnimationDuration = 1000;
+    private final OvershootInterpolator mInterpolator = new OvershootInterpolator(1.4f);
 
     public LeaderboardAdapter(List<LeaderboardListItem> listItems) {
         this.listItems = listItems;
@@ -61,8 +60,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         super.onAttachedToRecyclerView(recyclerView);
 
         this.recyclerView = recyclerView;
-
-        mAnimationDuration = 1000;
     }
 
     public static final RecyclerView.ChildDrawingOrderCallback defaultCallback = new RecyclerView.ChildDrawingOrderCallback() {
@@ -72,7 +69,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         }
     };
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         private LeaderboardListItem listItem;
 
         private View listItemView;

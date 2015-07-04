@@ -6,7 +6,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.FrameLayout;
 
 import com.wolfpakapp.wolfpak.R;
 
@@ -16,7 +15,7 @@ import java.util.List;
 
 public class LeaderboardActivity extends Activity {
 
-    final int ITEM_COUNT = 15;
+    final int ITEM_COUNT = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
