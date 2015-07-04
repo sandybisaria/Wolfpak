@@ -6,41 +6,66 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak.R;
+import com.wolfpakapp.wolfpak.WolfpakRestClient;
+
+import org.apache.http.Header;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class LeaderboardActivity extends Activity {
-
-    final int ITEM_COUNT = 1;
-
+    private List<LeaderboardListItem> listItems;
+    private LeaderboardAdapter mAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_leaderboard);
 
+        listItems = new ArrayList<>();
         RecyclerView leaderboardRecyclerView = (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
 
-        List<LeaderboardListItem> listItems = new ArrayList<>();
-        for (int idx = 0; idx < ITEM_COUNT; idx++) {
-            int img;
-            if (idx % 2 == 0)
-                img = R.drawable.realtest;
-            else
-                img = R.drawable.wolfpaktest;
-            LeaderboardListItem item = new LeaderboardListItem(idx, "It's a Wolfpak Party!", 1, img);
-            listItems.add(item);
-        }
-
-        LeaderboardAdapter leaderboardAdapter = new LeaderboardAdapter(listItems);
+        mAdapter = new LeaderboardAdapter(listItems);
 
         leaderboardRecyclerView.setHasFixedSize(true);
 
         leaderboardRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        leaderboardRecyclerView.setAdapter(leaderboardAdapter);
+        leaderboardRecyclerView.setAdapter(mAdapter);
+
+        WolfpakRestClient.get("posts/leaderboard/", null, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                final JSONArray resArray;
+                try {
+                    resArray = new JSONArray(new String(bytes));
+                    for (int idx = 0; idx < resArray.length(); idx++) {
+                        JSONObject listItemObject = resArray.getJSONObject(idx);
+                        boolean isImage = listItemObject.optBoolean("is_image");
+                        if (isImage) {
+                            int id = listItemObject.optInt("id");
+                            int voteCount = listItemObject.optInt("likes");
+                            String mediaUrl = listItemObject.optString("media_url");
+                            listItems.add(new LeaderboardListItem(id, "From the server", voteCount, mediaUrl));
+                        }
+
+                        mAdapter.notifyDataSetChanged();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                Toast.makeText(LeaderboardActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override

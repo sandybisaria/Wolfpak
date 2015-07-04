@@ -21,6 +21,7 @@ import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak.R;
 
 import java.util.List;
@@ -94,7 +95,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         public void bindListItem(LeaderboardListItem listItem) {
             this.listItem = listItem;
 
-            listItemImageView.setImageResource(listItem.getImageSource());
+            Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(listItemImageView);
             listItemImageView.setCropToPadding(true);
 
             listItemTextView.setText(listItem.getContentString());
@@ -257,7 +258,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 }
 
                 final ImageView expandedImageView = (ImageView) mActivity.findViewById(R.id.leaderboard_expanded_image_view);
-                expandedImageView.setImageResource(listItem.getImageSource());
+                Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(expandedImageView);
 
                 final Rect startBounds = new Rect();
                 final Rect finalBounds = new Rect();
