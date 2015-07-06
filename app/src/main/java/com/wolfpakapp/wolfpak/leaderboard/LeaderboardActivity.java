@@ -49,9 +49,10 @@ public class LeaderboardActivity extends Activity {
                         boolean isImage = listItemObject.optBoolean("is_image");
                         if (isImage) {
                             int id = listItemObject.optInt("id");
+                            String handle = listItemObject.optString("handle");
                             int voteCount = listItemObject.optInt("likes");
                             String mediaUrl = listItemObject.optString("media_url");
-                            listItems.add(new LeaderboardListItem(id, "From the server", voteCount, mediaUrl));
+                            listItems.add(new LeaderboardListItem(id, handle, voteCount, mediaUrl));
                         }
 
                         mAdapter.notifyDataSetChanged();
