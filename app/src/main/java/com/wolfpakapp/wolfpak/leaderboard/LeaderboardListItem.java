@@ -7,14 +7,16 @@ public class LeaderboardListItem {
     private int voteCount;
     private VoteStatus status;
     private String url;
+    private boolean isImage;
 
-    public LeaderboardListItem(int id, String contentString, int voteCount, String url) {
+    public LeaderboardListItem(int id, String contentString, int voteCount, String url, boolean isImage) {
         this.id = id;
         this.contentString = contentString;
         originalVoteCount = voteCount;
         this.voteCount = voteCount;
         this.url = url;
         this.status = VoteStatus.NOT_VOTED;
+        this.isImage = isImage;
     }
 
     public enum VoteStatus {
@@ -69,5 +71,13 @@ public class LeaderboardListItem {
 
     public int getOriginalVoteCount() {
         return originalVoteCount;
+    }
+
+    public boolean isImage() {
+        return isImage;
+    }
+
+    public void setIsImage(boolean isImage) {
+        this.isImage = isImage;
     }
 }

@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -19,11 +20,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak.R;
 
+import java.net.URI;
 import java.util.List;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
@@ -71,35 +75,56 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     };
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private LeaderboardListItem listItem;
-
         private View listItemView;
 
-        private ImageView listItemImageView;
+        private LeaderboardListItem listItem;
+
         private TextView listItemTextView;
         private TextView listItemViewCountTextView;
+
+        private LinearLayout contentLayout;
+
+        private ImageView listItemImageView;
+        private VideoView listItemVideoView;
 
         public ViewHolder(View view) {
             super(view);
 
             listItemView = view;
 
-            listItemImageView = (ImageView) view.findViewById(R.id.leaderboard_item_image_view);
-            listItemTextView = (TextView) view.findViewById(R.id.leaderboard_item_text_view);
-            listItemViewCountTextView = (TextView) view.findViewById(R.id.leaderboard_item_view_count_text_view);
+            listItemTextView = (TextView) listItemView.findViewById(R.id.leaderboard_item_text_view);
+            listItemViewCountTextView = (TextView) listItemView.findViewById(R.id.leaderboard_item_view_count_text_view);
 
-            listItemImageView.setOnClickListener(new ImageViewOnClickListener());
-            listItemViewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
+            contentLayout = (LinearLayout) listItemView.findViewById(R.id.leaderboard_item_content_view);
         }
 
         public void bindListItem(LeaderboardListItem listItem) {
             this.listItem = listItem;
 
-            Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(listItemImageView);
-            listItemImageView.setCropToPadding(true);
-
             listItemTextView.setText(listItem.getContentString());
+
             listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
+            listItemViewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
+
+            contentLayout.removeAllViews();
+
+            if (listItem.isImage()) {
+                listItemImageView = new ImageView(listItemView.getContext());
+                listItemImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                listItemImageView.setCropToPadding(true);
+                listItemImageView.setOnClickListener(new ImageViewOnClickListener());
+
+                contentLayout.addView(listItemImageView);
+
+                Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(listItemImageView);
+            } else {
+                listItemVideoView = new VideoView(listItemView.getContext());
+
+                contentLayout.addView(listItemVideoView);
+
+                Uri uri = Uri.parse(listItem.getUrl());
+                listItemVideoView.setVideoURI(uri);
+            }
         }
 
         private final class ViewCountOnTouchListener implements View.OnTouchListener {

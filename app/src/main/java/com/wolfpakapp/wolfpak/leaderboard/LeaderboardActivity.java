@@ -46,20 +46,19 @@ public class LeaderboardActivity extends Activity {
                     resArray = new JSONArray(new String(bytes));
                     for (int idx = 0; idx < resArray.length(); idx++) {
                         JSONObject listItemObject = resArray.getJSONObject(idx);
-                        boolean isImage = listItemObject.optBoolean("is_image");
-                        if (isImage) {
-                            int id = listItemObject.optInt("id");
-                            String handle = listItemObject.optString("handle");
-                            int voteCount = listItemObject.optInt("likes");
-                            String mediaUrl = listItemObject.optString("media_url");
-                            listItems.add(new LeaderboardListItem(id, handle, voteCount, mediaUrl));
-                        }
 
-                        mAdapter.notifyDataSetChanged();
+                        boolean isImage = listItemObject.optBoolean("is_image");
+                        int id = listItemObject.optInt("id");
+                        String handle = listItemObject.optString("handle");
+                        int voteCount = listItemObject.optInt("likes");
+                        String mediaUrl = listItemObject.optString("media_url");
+
+                        listItems.add(new LeaderboardListItem(id, handle, voteCount, mediaUrl, isImage));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                mAdapter.notifyDataSetChanged();
             }
 
             @Override
