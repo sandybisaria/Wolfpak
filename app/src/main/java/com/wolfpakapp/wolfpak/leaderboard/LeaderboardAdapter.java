@@ -28,14 +28,25 @@ import com.wolfpakapp.wolfpak.R;
 
 import java.util.List;
 
+/**
+ * The LeaderboardAdapter provides a binding from a set of
+ * {@link com.wolfpakapp.wolfpak.leaderboard.LeaderboardListItem} objects to a
+ * {@link RecyclerView}.
+ *
+ * @see android.support.v7.widget.RecyclerView.Adapter
+ * @see RecyclerView
+ * @see com.wolfpakapp.wolfpak.leaderboard.LeaderboardAdapter.ViewHolder
+ */
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
     private List<LeaderboardListItem> listItems;
     private RecyclerView recyclerView;
+    private Activity mActivity;
 
     private Animator mCurrentAnimator;
     private final Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
-    public LeaderboardAdapter(List<LeaderboardListItem> listItems) {
+    public LeaderboardAdapter(Activity mActivity, List<LeaderboardListItem> listItems) {
+        this.mActivity = mActivity;
         this.listItems = listItems;
     }
 
@@ -44,19 +55,43 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         return listItems.size();
     }
 
+    /**
+     * Called when RecyclerView needs a new
+     * {@link com.wolfpakapp.wolfpak.leaderboard.LeaderboardAdapter.ViewHolder} of the given type to
+     * represent an item.
+     *
+     * @param parent The ViewGroup into which the new View will be added after it is bound to
+     *               an adapter position.
+     * @param viewType The view type of the new View.
+     * @return A new ViewHolder that holds a View of the given view type.
+     */
     @Override
     public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.leaderboard_list_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+            .inflate(R.layout.leaderboard_list_item, parent, false);
 
         return new ViewHolder(view);
     }
 
+    /**
+     * Called by RecyclerView to display the data at the specified position. This method
+     * uppdates the contents of the
+     * {@link com.wolfpakapp.wolfpak.leaderboard.LeaderboardAdapter.ViewHolder#listItemView} to
+     * reflect the item at the given position.
+     * @param holder The ViewHolder which should be updated to represent the contents of the
+     *               item at the given position in the data set.
+     * @param position The position of the item within the adapter's data set.
+     */
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         LeaderboardListItem listItem = listItems.get(position);
         holder.bindListItem(listItem);
     }
 
+    /**
+     *  Called by RecyclerView when it starts observing this Adapter. Stores a reference to the
+     *  RecyclerView instance that the Adapter is attached to.
+     */
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
@@ -64,16 +99,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         this.recyclerView = recyclerView;
     }
 
-    public static final RecyclerView.ChildDrawingOrderCallback defaultCallback = new RecyclerView.ChildDrawingOrderCallback() {
-        @Override
-        public int onGetChildDrawingOrder(int childCount, int i) {
-            return i;
-        }
-    };
-
+    /**
+     * The ViewHolder describes a leaderboard item view and metadata about its place within the
+     * RecyclerView.
+     */
     public class ViewHolder extends RecyclerView.ViewHolder {
         private View listItemView;
-        private Activity mActivity;
 
         private LeaderboardListItem listItem;
 
@@ -268,7 +299,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         xAnim.start();
                         yAnim.start();
 
-                        recyclerView.setChildDrawingOrderCallback(LeaderboardAdapter.defaultCallback);
+                        recyclerView.setChildDrawingOrderCallback(null);
                     }
                 }
 

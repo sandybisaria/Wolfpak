@@ -31,7 +31,7 @@ public class LeaderboardActivity extends Activity {
         listItems = new ArrayList<>();
         RecyclerView leaderboardRecyclerView = (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
 
-        mAdapter = new LeaderboardAdapter(listItems);
+        mAdapter = new LeaderboardAdapter(this, listItems);
 
         leaderboardRecyclerView.setHasFixedSize(true);
 
