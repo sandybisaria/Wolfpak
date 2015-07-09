@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.media.Image;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
@@ -27,7 +28,6 @@ import android.widget.VideoView;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak.R;
 
-import java.net.URI;
 import java.util.List;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
@@ -35,8 +35,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     private RecyclerView recyclerView;
 
     private Animator mCurrentAnimator;
-    private final int mAnimationDuration = 1000;
-    private final OvershootInterpolator mInterpolator = new OvershootInterpolator(1.4f);
+    private final OvershootInterpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
     public LeaderboardAdapter(List<LeaderboardListItem> listItems) {
         this.listItems = listItems;
@@ -76,6 +75,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private View listItemView;
+        private Activity mActivity;
 
         private LeaderboardListItem listItem;
 
@@ -87,15 +87,20 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         private ImageView listItemImageView;
         private VideoView listItemVideoView;
 
+        private final int previewDimen;
+
         public ViewHolder(View view) {
             super(view);
 
             listItemView = view;
+            mActivity = (Activity) listItemView.getContext();
 
             listItemTextView = (TextView) listItemView.findViewById(R.id.leaderboard_item_text_view);
             listItemViewCountTextView = (TextView) listItemView.findViewById(R.id.leaderboard_item_view_count_text_view);
 
             contentLayout = (LinearLayout) listItemView.findViewById(R.id.leaderboard_item_content_view);
+
+            previewDimen = (int) mActivity.getResources().getDimension(R.dimen.leaderboard_item_preview_size);
         }
 
         public void bindListItem(LeaderboardListItem listItem) {
@@ -124,6 +129,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                 Uri uri = Uri.parse(listItem.getUrl());
                 listItemVideoView.setVideoURI(uri);
+                listItemVideoView.start();
             }
         }
 
@@ -258,8 +264,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         xAnim.setDuration(350);
                         yAnim.setDuration(350);
 
-                        xAnim.setInterpolator(mInterpolator);
-                        yAnim.setInterpolator(mInterpolator);
+                        xAnim.setInterpolator(INTERPOLATOR);
+                        yAnim.setInterpolator(INTERPOLATOR);
 
                         xAnim.start();
                         yAnim.start();
@@ -274,148 +280,154 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
         private final class ImageViewOnClickListener implements View.OnClickListener {
             @Override
-            public void onClick(View v) {
-                final View imgView = v;
-                Activity mActivity = (Activity)imgView.getContext();
-
-                if (mCurrentAnimator != null) {
-                    mCurrentAnimator.cancel();
-                }
-
+            public void onClick(final View view) {
                 final ImageView expandedImageView = (ImageView) mActivity.findViewById(R.id.leaderboard_expanded_image_view);
                 Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(expandedImageView);
 
-                final Rect startBounds = new Rect();
-                final Rect finalBounds = new Rect();
-                final Point globalOffset = new Point();
-
-                imgView.getGlobalVisibleRect(startBounds);
-                mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
-                startBounds.offset(-globalOffset.x, -globalOffset.y);
-                finalBounds.offset(-globalOffset.x, -globalOffset.y);
-
-                float startScale;
-                if ((float) finalBounds.width() / finalBounds.height()
-                        > (float) startBounds.width() / startBounds.height()) {
-                    // Extend start bounds horizontally
-                    startScale = (float) startBounds.height() / finalBounds.height();
-                    float startWidth = startScale * finalBounds.width();
-                    float deltaWidth = (startWidth - startBounds.width()) / 2;
-                    startBounds.left -= deltaWidth;
-                    startBounds.right += deltaWidth;
-                } else {
-                    // Extend start bounds vertically
-                    startScale = (float) startBounds.width() / finalBounds.width();
-                    float startHeight = startScale * finalBounds.height();
-                    float deltaHeight = (startHeight - startBounds.height()) / 2;
-                    startBounds.top -= deltaHeight;
-                    startBounds.bottom += deltaHeight;
-                }
-
-                imgView.setAlpha(0f);
-                expandedImageView.setVisibility(ImageView.VISIBLE);
-
-                expandedImageView.setPivotX(0f);
-                expandedImageView.setPivotY(0f);
-
-                AnimatorSet set = new AnimatorSet();
-                set
-                        .play(ObjectAnimator.ofFloat(expandedImageView, View.X,
-                                startBounds.left, finalBounds.left))
-                        .with(ObjectAnimator.ofFloat(expandedImageView, View.Y,
-                                startBounds.top, finalBounds.top))
-                        .with(ObjectAnimator.ofFloat(expandedImageView, View.SCALE_X,
-                                startScale, 1f)).with(ObjectAnimator.ofFloat(expandedImageView,
-                        View.SCALE_Y, startScale, 1f));
-                set.setDuration(mAnimationDuration);
-                set.setInterpolator(mInterpolator);
-                set.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        mCurrentAnimator = null;
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        mCurrentAnimator = null;
-                    }
-                });
-
-                Integer colorFrom = 0x00ffffff;//recyclerView.getResources().getColor(android.R.color.white);
-                Integer colorTo = 0xff000000;//recyclerView.getResources().getColor(android.R.color.black);
-                ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
-                colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animator) {
-                        expandedImageView.setBackgroundColor((Integer)animator.getAnimatedValue());
-                    }
-
-                });
-                colorAnimation.setDuration(mAnimationDuration);
-
-                colorAnimation.start();
-                set.start();
-                mCurrentAnimator = set;
-
-                final float startScaleFinal = startScale;
-                expandedImageView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        if (mCurrentAnimator != null) {
-                            mCurrentAnimator.cancel();
-                        }
-
-                        AnimatorSet set = new AnimatorSet();
-                        set.play(ObjectAnimator
-                                .ofFloat(expandedImageView, View.X, startBounds.left))
-                                .with(ObjectAnimator
-                                        .ofFloat(expandedImageView,
-                                                View.Y,startBounds.top))
-                                .with(ObjectAnimator
-                                        .ofFloat(expandedImageView,
-                                                View.SCALE_X, startScaleFinal))
-                                .with(ObjectAnimator
-                                        .ofFloat(expandedImageView,
-                                                View.SCALE_Y, startScaleFinal));
-                        set.setDuration(mAnimationDuration);
-                        set.setInterpolator(mInterpolator);
-                        set.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                imgView.setAlpha(1f);
-                                expandedImageView.setVisibility(View.GONE);
-                                mCurrentAnimator = null;
-                            }
-
-                            @Override
-                            public void onAnimationCancel(Animator animation) {
-                                imgView.setAlpha(1f);
-                                expandedImageView.setVisibility(View.GONE);
-                                mCurrentAnimator = null;
-                            }
-                        });
-                        Integer colorFrom = 0xff000000;//recyclerView.getResources().getColor(android.R.color.black);
-                        Log.d("BLACK", Integer.toHexString(colorFrom));
-                        Integer colorTo = 0x00ffffff;//recyclerView.getResources().getColor(android.R.color.white);
-                        Log.d("WHITE", Integer.toHexString(colorTo));
-                        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
-                        colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-                            @Override
-                            public void onAnimationUpdate(ValueAnimator animator) {
-                                expandedImageView.setBackgroundColor((Integer)animator.getAnimatedValue());
-                            }
-
-                        });
-                        colorAnimation.setDuration(mAnimationDuration);
-
-                        colorAnimation.start();
-                        set.start();
-                        mCurrentAnimator = set;
-                    }
-                });
+                expandView(view, expandedImageView);
             }
         }
+
+        private void expandView(final View initialView, final View expandedView) {
+            final int ANIM_DURATION = 500;
+
+            if (mCurrentAnimator != null) {
+                mCurrentAnimator.cancel();
+            }
+
+            final Rect startBounds = new Rect();
+            final Rect finalBounds = new Rect();
+            final Point globalOffset = new Point();
+
+            initialView.getGlobalVisibleRect(startBounds);
+            mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
+            startBounds.offset(-globalOffset.x, -globalOffset.y);
+            finalBounds.offset(-globalOffset.x, -globalOffset.y);
+
+            initialView.setAlpha(0f);
+            expandedView.setVisibility(ImageView.VISIBLE);
+            expandedView.setClipBounds(null);
+
+            expandedView.setPivotX(0f);
+            expandedView.setPivotY(0f);
+
+            ValueAnimator widthAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.width());
+            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    Rect clipBounds = new Rect();
+                    Point globalOffset = new Point();
+                    expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
+                    clipBounds.offset(-globalOffset.x, -globalOffset.y);
+                    expandedView.setClipBounds(clipBounds);
+
+                    expandedView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                    expandedView.requestLayout();
+                }
+            });
+            ValueAnimator heightAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.height());
+            heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    Rect clipBounds = new Rect();
+                    Point globalOffset = new Point();
+                    expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
+                    clipBounds.offset(-globalOffset.x, -globalOffset.y);
+                    expandedView.setClipBounds(clipBounds);
+
+                    expandedView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                    expandedView.requestLayout();
+                }
+            });
+
+            AnimatorSet set = new AnimatorSet();
+            set.play(ObjectAnimator.ofFloat(expandedView, View.X, startBounds.left, finalBounds.left))
+                .with(ObjectAnimator.ofFloat(expandedView, View.Y, startBounds.top, finalBounds.top))
+                .with(widthAnimator).with(heightAnimator);
+            set.setDuration(ANIM_DURATION);
+            set.setInterpolator(INTERPOLATOR);
+            set.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mCurrentAnimator = null;
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    mCurrentAnimator = null;
+                }
+            });
+
+            set.start();
+            mCurrentAnimator = set;
+
+            expandedView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (mCurrentAnimator != null) {
+                        mCurrentAnimator.cancel();
+                    }
+
+                    ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
+                    widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animation) {
+                            Rect clipBounds = new Rect();
+                            Point globalOffset = new Point();
+                            expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
+                            clipBounds.offset(-globalOffset.x, -globalOffset.y);
+                            expandedView.setClipBounds(clipBounds);
+
+                            expandedView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                            expandedView.requestLayout();
+                        }
+                    });
+                    ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height(), previewDimen);
+                    heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animation) {
+                            Rect clipBounds = new Rect();
+                            Point globalOffset = new Point();
+                            expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
+                            clipBounds.offset(-globalOffset.x, -globalOffset.y);
+                            expandedView.setClipBounds(clipBounds);
+
+                            expandedView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                            expandedView.requestLayout();
+                        }
+                    });
+
+                    AnimatorSet set = new AnimatorSet();
+                    set.play(ObjectAnimator.ofFloat(expandedView, View.X, finalBounds.left, startBounds.left))
+                            .with(ObjectAnimator.ofFloat(expandedView, View.Y, finalBounds.top, startBounds.top))
+                            .with(widthAnimator).with(heightAnimator);
+                    set.setDuration(ANIM_DURATION);
+                    set.setInterpolator(INTERPOLATOR);
+                    set.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            initialView.setAlpha(1f);
+                            expandedView.setVisibility(View.GONE);
+                            mCurrentAnimator = null;
+
+                            Rect exp = new Rect();
+                            initialView.getGlobalVisibleRect(exp);
+                            Log.d("Start rect", exp.toString());
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+                            initialView.setAlpha(1f);
+                            expandedView.setVisibility(View.GONE);
+                            mCurrentAnimator = null;
+                        }
+                    });
+
+                    set.start();
+                    mCurrentAnimator = set;
+                }
+            });
+        }
+
     }
 }
