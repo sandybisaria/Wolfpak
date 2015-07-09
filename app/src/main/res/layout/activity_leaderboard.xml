@@ -5,12 +5,19 @@
     tools:context="com.wolfpakapp.wolfpak.leaderboard.LeaderboardActivity"
     android:clipChildren="false" android:id="@+id/leaderboard_frame_layout">
 
-    <android.support.v7.widget.RecyclerView
+    <android.support.v4.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="vertical"
-        android:id="@+id/leaderboard_recycler_view"
-        android:clipChildren="false"/>
+        android:id="@+id/leaderboard_swipe_refresh_layout">
+
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            android:id="@+id/leaderboard_recycler_view"
+            android:clipChildren="false"/>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <ImageView
         android:layout_width="match_parent"
