@@ -3,22 +3,20 @@ package com.wolfpakapp.wolfpak.leaderboard;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
-import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
-import android.media.Image;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -35,7 +33,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     private RecyclerView recyclerView;
 
     private Animator mCurrentAnimator;
-    private final OvershootInterpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
+    private final Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
     public LeaderboardAdapter(List<LeaderboardListItem> listItems) {
         this.listItems = listItems;
@@ -289,11 +287,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         }
 
         private void expandView(final View initialView, final View expandedView) {
-            final int ANIM_DURATION = 500;
-
-            if (mCurrentAnimator != null) {
-                mCurrentAnimator.cancel();
-            }
+            final int ANIM_DURATION = 1000;
 
             final Rect startBounds = new Rect();
             final Rect finalBounds = new Rect();
@@ -304,10 +298,13 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             startBounds.offset(-globalOffset.x, -globalOffset.y);
             finalBounds.offset(-globalOffset.x, -globalOffset.y);
 
-            initialView.setAlpha(0f);
-            expandedView.setVisibility(ImageView.VISIBLE);
-            expandedView.setClipBounds(null);
+            if (mCurrentAnimator != null) {
+                mCurrentAnimator.cancel();
+            }
 
+            initialView.setAlpha(0f);
+
+            expandedView.setVisibility(ImageView.VISIBLE);
             expandedView.setPivotX(0f);
             expandedView.setPivotY(0f);
 
@@ -315,12 +312,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
-                    Rect clipBounds = new Rect();
-                    Point globalOffset = new Point();
-                    expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
-                    clipBounds.offset(-globalOffset.x, -globalOffset.y);
-                    expandedView.setClipBounds(clipBounds);
-
+                    clipViewToGlobalBounds(expandedView);
                     expandedView.getLayoutParams().width = (int) animation.getAnimatedValue();
                     expandedView.requestLayout();
                 }
@@ -329,12 +321,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
-                    Rect clipBounds = new Rect();
-                    Point globalOffset = new Point();
-                    expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
-                    clipBounds.offset(-globalOffset.x, -globalOffset.y);
-                    expandedView.setClipBounds(clipBounds);
-
+                    clipViewToGlobalBounds(expandedView);
                     expandedView.getLayoutParams().height = (int) animation.getAnimatedValue();
                     expandedView.requestLayout();
                 }
@@ -372,12 +359,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                         @Override
                         public void onAnimationUpdate(ValueAnimator animation) {
-                            Rect clipBounds = new Rect();
-                            Point globalOffset = new Point();
-                            expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
-                            clipBounds.offset(-globalOffset.x, -globalOffset.y);
-                            expandedView.setClipBounds(clipBounds);
-
+                            clipViewToGlobalBounds(expandedView);
                             expandedView.getLayoutParams().width = (int) animation.getAnimatedValue();
                             expandedView.requestLayout();
                         }
@@ -386,12 +368,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                         @Override
                         public void onAnimationUpdate(ValueAnimator animation) {
-                            Rect clipBounds = new Rect();
-                            Point globalOffset = new Point();
-                            expandedView.getGlobalVisibleRect(clipBounds, globalOffset);
-                            clipBounds.offset(-globalOffset.x, -globalOffset.y);
-                            expandedView.setClipBounds(clipBounds);
-
+                            clipViewToGlobalBounds(expandedView);
                             expandedView.getLayoutParams().height = (int) animation.getAnimatedValue();
                             expandedView.requestLayout();
                         }
@@ -409,10 +386,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                             initialView.setAlpha(1f);
                             expandedView.setVisibility(View.GONE);
                             mCurrentAnimator = null;
-
-                            Rect exp = new Rect();
-                            initialView.getGlobalVisibleRect(exp);
-                            Log.d("Start rect", exp.toString());
                         }
 
                         @Override
@@ -429,5 +402,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             });
         }
 
+        private void clipViewToGlobalBounds(View view) {
+            Rect clipBounds = new Rect();
+            Point globalOffset = new Point();
+            view.getGlobalVisibleRect(clipBounds, globalOffset);
+            clipBounds.offset(-globalOffset.x, -globalOffset.y);
+            view.setClipBounds(clipBounds);
+        }
     }
 }
