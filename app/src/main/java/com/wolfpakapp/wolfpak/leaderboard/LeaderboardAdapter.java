@@ -9,14 +9,19 @@ import android.app.Activity;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -40,6 +45,7 @@ import java.util.List;
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
     private List<LeaderboardListItem> listItems;
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout mLayout;
     private Activity mActivity;
 
     private Animator mCurrentAnimator;
@@ -47,6 +53,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
     public LeaderboardAdapter(Activity mActivity, List<LeaderboardListItem> listItems) {
         this.mActivity = mActivity;
+        mLayout = (SwipeRefreshLayout) mActivity.findViewById(R.id.leaderboard_swipe_refresh_layout);
         this.listItems = listItems;
     }
 
@@ -132,7 +139,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             previewDimen = (int) mActivity.getResources().getDimension(R.dimen.leaderboard_item_preview_size);
         }
 
-        public void bindListItem(LeaderboardListItem listItem) {
+        public void bindListItem(final LeaderboardListItem listItem) {
             this.listItem = listItem;
 
             listItemTextView.setText(listItem.getContentString());
@@ -156,9 +163,28 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                 contentLayout.addView(listItemVideoView);
 
-                Uri uri = Uri.parse(listItem.getUrl());
+                final Uri uri = Uri.parse(listItem.getUrl());
                 listItemVideoView.setVideoURI(uri);
-                listItemVideoView.start();
+                listItemVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mp) {
+                        listItemVideoView.setOnTouchListener(new View.OnTouchListener() {
+                            @Override
+                            public boolean onTouch(View v, MotionEvent event) {
+                            final int action = MotionEventCompat.getActionMasked(event);
+                            switch (action) {
+                                case MotionEvent.ACTION_UP: {
+                                    final VideoView expandedVideoView = (VideoView) mActivity.findViewById(R.id.leaderboard_expanded_video_view);
+                                    expandedVideoView.setVideoURI(uri);
+                                    expandVideoView(listItemVideoView, expandedVideoView);
+                                }
+                            }
+
+                            return true;
+                            }
+                        });
+                    }
+                });
             }
         }
 
@@ -178,6 +204,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN: {
+                        mLayout.setEnabled(false);
+
 //                        final int pointerIndex = MotionEventCompat.getActionIndex(event);
                         final float x = event.getRawX(); //MotionEventCompat.getX(event, pointerIndex);
                         final float y = event.getRawY(); //MotionEventCompat.getY(event, pointerIndex);
@@ -267,6 +295,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP: {
+                        mLayout.setEnabled(true);
+
                         GradientDrawable bg = (GradientDrawable) v.getResources().getDrawable(R.drawable.leaderboard_item_view_count_background);
                         if (v.getY() < initialViewY) {
                             if (listItem.getStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
@@ -313,11 +343,11 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 final ImageView expandedImageView = (ImageView) mActivity.findViewById(R.id.leaderboard_expanded_image_view);
                 Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(expandedImageView);
 
-                expandView(view, expandedImageView);
+                expandImageView(view, expandedImageView);
             }
         }
 
-        private void expandView(final View initialView, final View expandedView) {
+        private void expandImageView(final View initialView, final ImageView expandView) {
             final int ANIM_DURATION = 1000;
 
             final Rect startBounds = new Rect();
@@ -335,33 +365,33 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             initialView.setAlpha(0f);
 
-            expandedView.setVisibility(ImageView.VISIBLE);
-            expandedView.setPivotX(0f);
-            expandedView.setPivotY(0f);
+            expandView.setVisibility(ImageView.VISIBLE);
+            expandView.setPivotX(0f);
+            expandView.setPivotY(0f);
 
             ValueAnimator widthAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.width());
             widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
-                    clipViewToGlobalBounds(expandedView);
-                    expandedView.getLayoutParams().width = (int) animation.getAnimatedValue();
-                    expandedView.requestLayout();
+                    clipViewToGlobalBounds(expandView);
+                    expandView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                    expandView.requestLayout();
                 }
             });
             ValueAnimator heightAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.height());
             heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
-                    clipViewToGlobalBounds(expandedView);
-                    expandedView.getLayoutParams().height = (int) animation.getAnimatedValue();
-                    expandedView.requestLayout();
+                    clipViewToGlobalBounds(expandView);
+                    expandView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                    expandView.requestLayout();
                 }
             });
 
             AnimatorSet set = new AnimatorSet();
-            set.play(ObjectAnimator.ofFloat(expandedView, View.X, startBounds.left, finalBounds.left))
-                .with(ObjectAnimator.ofFloat(expandedView, View.Y, startBounds.top, finalBounds.top))
-                .with(widthAnimator).with(heightAnimator);
+            set.play(ObjectAnimator.ofFloat(expandView, View.X, startBounds.left, finalBounds.left))
+                    .with(ObjectAnimator.ofFloat(expandView, View.Y, startBounds.top, finalBounds.top))
+                    .with(widthAnimator).with(heightAnimator);
             set.setDuration(ANIM_DURATION);
             set.setInterpolator(INTERPOLATOR);
             set.addListener(new AnimatorListenerAdapter() {
@@ -379,7 +409,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             set.start();
             mCurrentAnimator = set;
 
-            expandedView.setOnClickListener(new View.OnClickListener() {
+            expandView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     if (mCurrentAnimator != null) {
@@ -390,24 +420,24 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                         @Override
                         public void onAnimationUpdate(ValueAnimator animation) {
-                            clipViewToGlobalBounds(expandedView);
-                            expandedView.getLayoutParams().width = (int) animation.getAnimatedValue();
-                            expandedView.requestLayout();
+                            clipViewToGlobalBounds(expandView);
+                            expandView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                            expandView.requestLayout();
                         }
                     });
                     ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height(), previewDimen);
                     heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                         @Override
                         public void onAnimationUpdate(ValueAnimator animation) {
-                            clipViewToGlobalBounds(expandedView);
-                            expandedView.getLayoutParams().height = (int) animation.getAnimatedValue();
-                            expandedView.requestLayout();
+                            clipViewToGlobalBounds(expandView);
+                            expandView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                            expandView.requestLayout();
                         }
                     });
 
                     AnimatorSet set = new AnimatorSet();
-                    set.play(ObjectAnimator.ofFloat(expandedView, View.X, finalBounds.left, startBounds.left))
-                            .with(ObjectAnimator.ofFloat(expandedView, View.Y, finalBounds.top, startBounds.top))
+                    set.play(ObjectAnimator.ofFloat(expandView, View.X, finalBounds.left, startBounds.left))
+                            .with(ObjectAnimator.ofFloat(expandView, View.Y, finalBounds.top, startBounds.top))
                             .with(widthAnimator).with(heightAnimator);
                     set.setDuration(ANIM_DURATION);
                     set.setInterpolator(INTERPOLATOR);
@@ -415,14 +445,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         @Override
                         public void onAnimationEnd(Animator animation) {
                             initialView.setAlpha(1f);
-                            expandedView.setVisibility(View.GONE);
+                            expandView.setVisibility(View.GONE);
                             mCurrentAnimator = null;
                         }
 
                         @Override
                         public void onAnimationCancel(Animator animation) {
                             initialView.setAlpha(1f);
-                            expandedView.setVisibility(View.GONE);
+                            expandView.setVisibility(View.GONE);
                             mCurrentAnimator = null;
                         }
                     });
@@ -431,6 +461,124 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     mCurrentAnimator = set;
                 }
             });
+        }
+
+        private void expandVideoView(final View initialView, final VideoView expandView) {
+            final int ANIM_DURATION = 1000;
+
+            final Rect startBounds = new Rect();
+            final Rect finalBounds = new Rect();
+            final Point globalOffset = new Point();
+            final int HEIGHT_OFFSET = 75;
+
+            initialView.getGlobalVisibleRect(startBounds);
+            mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
+            startBounds.offset(-globalOffset.x, -globalOffset.y);
+            finalBounds.offset(-globalOffset.x, -globalOffset.y);
+
+            if (mCurrentAnimator != null) {
+                mCurrentAnimator.cancel();
+            }
+
+            initialView.setAlpha(0f);
+
+            expandView.setVisibility(ImageView.VISIBLE);
+            expandView.setPivotX(0f);
+            expandView.setPivotY(0f);
+
+            ValueAnimator widthAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.width());
+            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    clipViewToGlobalBounds(expandView);
+                    expandView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                    expandView.requestLayout();
+                }
+            });
+            ValueAnimator heightAnimator =
+                    ValueAnimator.ofInt(previewDimen, finalBounds.height() + HEIGHT_OFFSET);
+            heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    clipViewToGlobalBounds(expandView);
+                    expandView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                    expandView.requestLayout();
+                }
+            });
+
+            AnimatorSet set = new AnimatorSet();
+            set.play(ObjectAnimator.ofFloat(expandView, View.X, startBounds.left, finalBounds.left))
+                    .with(ObjectAnimator.ofFloat(expandView, View.Y, startBounds.top, finalBounds.top))
+                    .with(widthAnimator).with(heightAnimator);
+            set.setDuration(ANIM_DURATION);
+            set.setInterpolator(INTERPOLATOR);
+            set.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mCurrentAnimator = null;
+                    expandView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            if (mCurrentAnimator != null) {
+                                mCurrentAnimator.cancel();
+                            }
+
+                            ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
+                            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                @Override
+                                public void onAnimationUpdate(ValueAnimator animation) {
+                                    clipViewToGlobalBounds(expandView);
+                                    expandView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                                    expandView.requestLayout();
+                                }
+                            });
+                            ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height() + HEIGHT_OFFSET, previewDimen);
+                            heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                @Override
+                                public void onAnimationUpdate(ValueAnimator animation) {
+                                    clipViewToGlobalBounds(expandView);
+                                    expandView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                                    expandView.requestLayout();
+                                }
+                            });
+
+                            AnimatorSet set = new AnimatorSet();
+                            set.play(ObjectAnimator.ofFloat(expandView, View.X, finalBounds.left, startBounds.left))
+                                    .with(ObjectAnimator.ofFloat(expandView, View.Y, finalBounds.top, startBounds.top))
+                                    .with(widthAnimator).with(heightAnimator);
+                            set.setDuration(ANIM_DURATION);
+                            set.setInterpolator(INTERPOLATOR);
+                            set.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    initialView.setAlpha(1f);
+                                    expandView.setVisibility(View.GONE);
+                                    mCurrentAnimator = null;
+                                }
+
+                                @Override
+                                public void onAnimationCancel(Animator animation) {
+                                    initialView.setAlpha(1f);
+                                    expandView.setVisibility(View.GONE);
+                                    mCurrentAnimator = null;
+                                }
+                            });
+
+                            set.start();
+                            mCurrentAnimator = set;
+                        }
+                    });
+                    expandView.start();
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    mCurrentAnimator = null;
+                }
+            });
+
+            set.start();
+            mCurrentAnimator = set;
         }
 
         private void clipViewToGlobalBounds(View view) {
