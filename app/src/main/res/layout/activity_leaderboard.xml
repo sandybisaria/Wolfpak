@@ -24,14 +24,19 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:visibility="gone"
-        android:contentDescription="Expanded image"
+        android:id="@+id/leaderboard_animating_view"/>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
         android:id="@+id/leaderboard_expanded_image_view"/>
 
     <VideoView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        android:contentDescription="Expanded video"
         android:id="@+id/leaderboard_expanded_video_view"/>
 
 </FrameLayout>
