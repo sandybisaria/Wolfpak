@@ -19,7 +19,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -50,6 +49,11 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     private Animator mCurrentAnimator;
     private final Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
 
+    /**
+     * Instantiate a new LeaderboardAdapter with the given List of LeaderboardListItem objects
+     * @param mActivity The Activity which created the Adapter
+     * @param listItems The List of LeaderboardListItem objects
+     */
     public LeaderboardAdapter(Activity mActivity, List<LeaderboardListItem> listItems) {
         this.listItems = listItems;
         this.mActivity = mActivity;
@@ -63,14 +67,13 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     }
 
     /**
-     * Called when RecyclerView needs a new
-     * {@link com.wolfpakapp.wolfpak.leaderboard.LeaderboardAdapter.ViewHolder} of the given type to
-     * represent an item.
+     * Called when RecyclerView needs a new ViewHolder of the given type to represent an item.
      *
      * @param parent The ViewGroup into which the new View will be added after it is bound to
      *               an adapter position.
      * @param viewType The view type of the new View.
-     * @return A new ViewHolder that holds a View of the given view type.
+     * @return A new {@link com.wolfpakapp.wolfpak.leaderboard.LeaderboardAdapter.ViewHolder}
+     *         that holds a View of the given view type.
      */
     @Override
     public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
@@ -125,6 +128,10 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
         private final int previewDimen;
 
+        /**
+         * Instantiate the ViewHolder with the given item View
+         * @param view The View that represents a single list item
+         */
         public ViewHolder(View view) {
             super(view);
 
@@ -139,6 +146,10 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             previewDimen = (int) mActivity.getResources().getDimension(R.dimen.leaderboard_item_preview_size);
         }
 
+        /**
+         * Bind a list item to the ViewHolder
+         * @param listItem The {@link LeaderboardListItem} that will be bound to the ViewHolder
+         */
         public void bindListItem(final LeaderboardListItem listItem) {
             this.listItem = listItem;
 
@@ -155,13 +166,11 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 listItemImageView.setCropToPadding(true);
                 listItemImageView.setOnClickListener(new ImageViewOnClickListener());
 
-                contentLayout.addView(listItemImageView);
-
                 Picasso.with(mActivity).load(listItem.getUrl()).into(listItemImageView);
+
+                contentLayout.addView(listItemImageView);
             } else {
                 listItemVideoView = new VideoView(mActivity);
-
-                contentLayout.addView(listItemVideoView);
 
                 listItemVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
@@ -172,9 +181,16 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                 Uri uri = Uri.parse(listItem.getUrl());
                 listItemVideoView.setVideoURI(uri);
+
+                contentLayout.addView(listItemVideoView);
             }
         }
 
+        /**
+         * The ViewCountOnTouchListener encapsulates the callback when touch events are sent to the
+         * ViewCountTextView. It allows  the View to be dragged and released and defines the
+         * appropriate behaviors for said actions.
+         */
         private final class ViewCountOnTouchListener implements View.OnTouchListener {
             private int activePointerId = MotionEvent.INVALID_POINTER_ID;
 
@@ -324,6 +340,10 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             }
         }
 
+        /**
+         * The ImageViewOnClickListener encapsulates the callback when the ImageView is clicked.
+         * This is intended for the thumbnail images in each list item.
+         */
         private final class ImageViewOnClickListener implements View.OnClickListener {
             @Override
             public void onClick(final View view) {
@@ -331,10 +351,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 Picasso.with(mActivity).load(listItem.getUrl()).into(expandedImageView);
                 Picasso.with(mActivity).load(listItem.getUrl()).into(animatingView);
 
-                expandView(view, expandedImageView);
+                animateView(view, expandedImageView);
             }
         }
 
+        /**
+         * The VideoViewOnTouchListener encapsulates the callback when the VideoView is clicked.
+         * This is intended for the thumbnail videos in each list item.
+         */
         private final class VideoViewOnTouchListener implements View.OnTouchListener {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -347,7 +371,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                         Picasso.with(mActivity).load(R.drawable.wolfpaktest).into(animatingView);
 
-                        expandView(listItemVideoView, expandedVideoView);
+                        animateView(listItemVideoView, expandedVideoView);
                     }
                 }
 
@@ -355,7 +379,13 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             }
         }
 
-        private void expandView(final View initialView, final View expandView) {
+        /**
+         * Animate the thumbnail view and set the appropriate behavior for the expanded View.
+         * @param initialView The View that was clicked (ImageView) or touched (VideoView).
+         * @param expandView The fullscreen View. Will be an ImageView when an ImageView was clicked
+         *                   and a VideoView when a VideoView was touched.
+         */
+        private void animateView(final View initialView, final View expandView) {
             final int ANIM_DURATION = 1000;
 
             final Rect startBounds = new Rect();
@@ -537,6 +567,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                 mCurrentAnimator = set;
                             }
                         });
+
                         expandVideoView.start();
                     }
 
@@ -552,6 +583,10 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             mCurrentAnimator = set;
         }
 
+        /**
+         * Ensure that the View is clipped to its global visible bounds.
+         * @param view The View to be clipped
+         */
         private void clipViewToGlobalBounds(View view) {
             Rect clipBounds = new Rect();
             Point globalOffset = new Point();
