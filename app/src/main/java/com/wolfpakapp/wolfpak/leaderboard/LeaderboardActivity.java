@@ -49,6 +49,7 @@ public class LeaderboardActivity extends Activity {
                     @Override
                     public void onSuccess(int i, Header[] headers, byte[] bytes) {
                         final JSONArray resArray;
+                        List<LeaderboardListItem> freshListItems = new ArrayList<>();
                         try {
                             resArray = new JSONArray(new String(bytes));
                             for (int idx = 0; idx < resArray.length(); idx++) {
@@ -60,7 +61,16 @@ public class LeaderboardActivity extends Activity {
                                 int voteCount = listItemObject.optInt("likes");
                                 String mediaUrl = listItemObject.optString("media_url");
 
-                                listItems.add(new LeaderboardListItem(id, handle, voteCount, mediaUrl, isImage));
+                                freshListItems.add(new LeaderboardListItem(id, handle, voteCount, mediaUrl, isImage));
+                                for (LeaderboardListItem freshListItem : freshListItems) {
+                                    for (LeaderboardListItem currentListItem : listItems) {
+                                        if (freshListItem.getId() == currentListItem.getId()) {
+                                            freshListItems.add(freshListItems.indexOf(freshListItem), currentListItem);
+                                            break;
+                                        }
+                                    }
+                                }
+                                listItems = freshListItems;
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
