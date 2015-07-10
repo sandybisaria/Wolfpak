@@ -6,9 +6,11 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
@@ -28,6 +30,7 @@ import android.widget.VideoView;
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak.R;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -164,13 +167,15 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 listItemImageView = new ImageView(mActivity);
                 listItemImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 listItemImageView.setCropToPadding(true);
-                listItemImageView.setOnClickListener(new ImageViewOnClickListener());
-
                 Picasso.with(mActivity).load(listItem.getUrl()).into(listItemImageView);
+
+                listItemImageView.setOnClickListener(new ImageViewOnClickListener());
 
                 contentLayout.addView(listItemImageView);
             } else {
                 listItemVideoView = new VideoView(mActivity);
+                Uri uri = Uri.parse(listItem.getUrl());
+                listItemVideoView.setVideoURI(uri);
 
                 listItemVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
@@ -178,9 +183,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         listItemVideoView.setOnTouchListener(new VideoViewOnTouchListener());
                     }
                 });
-
-                Uri uri = Uri.parse(listItem.getUrl());
-                listItemVideoView.setVideoURI(uri);
 
                 contentLayout.addView(listItemVideoView);
             }
@@ -369,7 +371,10 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         Uri uri = Uri.parse(listItem.getUrl());
                         expandedVideoView.setVideoURI(uri);
 
-                        Picasso.with(mActivity).load(R.drawable.wolfpaktest).into(animatingView);
+                        MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
+                        mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
+                        Bitmap frame = mRetriever.getFrameAtTime(0);
+                        animatingView.setImageBitmap(frame);
 
                         animateView(listItemVideoView, expandedVideoView);
                     }
@@ -521,6 +526,11 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                                 animatingView.setVisibility(View.VISIBLE);
                                 expandView.setVisibility(View.GONE);
+
+                                MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
+                                mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
+                                Bitmap frame = mRetriever.getFrameAtTime();
+                                animatingView.setImageBitmap(frame);
 
                                 ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
                                 widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
