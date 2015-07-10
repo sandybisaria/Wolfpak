@@ -150,41 +150,28 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             contentLayout.removeAllViews();
 
             if (listItem.isImage()) {
-                listItemImageView = new ImageView(listItemView.getContext());
+                listItemImageView = new ImageView(mActivity);
                 listItemImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 listItemImageView.setCropToPadding(true);
                 listItemImageView.setOnClickListener(new ImageViewOnClickListener());
 
                 contentLayout.addView(listItemImageView);
 
-                Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(listItemImageView);
+                Picasso.with(mActivity).load(listItem.getUrl()).into(listItemImageView);
             } else {
-                listItemVideoView = new VideoView(listItemView.getContext());
+                listItemVideoView = new VideoView(mActivity);
 
                 contentLayout.addView(listItemVideoView);
 
-                final Uri uri = Uri.parse(listItem.getUrl());
-                listItemVideoView.setVideoURI(uri);
                 listItemVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(MediaPlayer mp) {
-                        listItemVideoView.setOnTouchListener(new View.OnTouchListener() {
-                            @Override
-                            public boolean onTouch(View v, MotionEvent event) {
-                            final int action = MotionEventCompat.getActionMasked(event);
-                            switch (action) {
-                                case MotionEvent.ACTION_UP: {
-                                    final VideoView expandedVideoView = (VideoView) mActivity.findViewById(R.id.leaderboard_expanded_video_view);
-                                    expandedVideoView.setVideoURI(uri);
-                                    expandVideoView(listItemVideoView, expandedVideoView);
-                                }
-                            }
-
-                            return true;
-                            }
-                        });
+                        listItemVideoView.setOnTouchListener(new VideoViewOnTouchListener());
                     }
                 });
+
+                Uri uri = Uri.parse(listItem.getUrl());
+                listItemVideoView.setVideoURI(uri);
             }
         }
 
@@ -341,10 +328,30 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             @Override
             public void onClick(final View view) {
                 final ImageView expandedImageView = (ImageView) mActivity.findViewById(R.id.leaderboard_expanded_image_view);
-                Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(expandedImageView);
-                Picasso.with(listItemView.getContext()).load(listItem.getUrl()).into(animatingView);
+                Picasso.with(mActivity).load(listItem.getUrl()).into(expandedImageView);
+                Picasso.with(mActivity).load(listItem.getUrl()).into(animatingView);
 
                 expandView(view, expandedImageView);
+            }
+        }
+
+        private final class VideoViewOnTouchListener implements View.OnTouchListener {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                final int action = MotionEventCompat.getActionMasked(event);
+                switch (action) {
+                    case MotionEvent.ACTION_UP: {
+                        final VideoView expandedVideoView = (VideoView) mActivity.findViewById(R.id.leaderboard_expanded_video_view);
+                        Uri uri = Uri.parse(listItem.getUrl());
+                        expandedVideoView.setVideoURI(uri);
+
+                        Picasso.with(mActivity).load(R.drawable.wolfpaktest).into(animatingView);
+
+                        expandView(listItemVideoView, expandedVideoView);
+                    }
+                }
+
+                return true;
             }
         }
 
@@ -354,6 +361,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             final Rect startBounds = new Rect();
             final Rect finalBounds = new Rect();
             final Point globalOffset = new Point();
+//            final int HEIGHT_OFFSET = 75;
 
             initialView.getGlobalVisibleRect(startBounds);
             mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
@@ -395,193 +403,150 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     .with(widthAnimator).with(heightAnimator);
             set.setDuration(ANIM_DURATION);
             set.setInterpolator(INTERPOLATOR);
-            set.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mCurrentAnimator = null;
-                    animatingView.setVisibility(View.GONE);
-                    expandView.setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    mCurrentAnimator = null;
-                }
-            });
-
-            set.start();
-            mCurrentAnimator = set;
-
-            expandView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (mCurrentAnimator != null) {
-                        mCurrentAnimator.cancel();
+            if (expandView instanceof ImageView) {
+                set.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        mCurrentAnimator = null;
+                        animatingView.setVisibility(View.GONE);
+                        expandView.setVisibility(View.VISIBLE);
                     }
 
-                    animatingView.setVisibility(View.VISIBLE);
-                    expandView.setVisibility(View.GONE);
-
-                    ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
-                    widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                        @Override
-                        public void onAnimationUpdate(ValueAnimator animation) {
-                            clipViewToGlobalBounds(animatingView);
-                            animatingView.getLayoutParams().width = (int) animation.getAnimatedValue();
-                            animatingView.requestLayout();
-                        }
-                    });
-                    ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height(), previewDimen);
-                    heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                        @Override
-                        public void onAnimationUpdate(ValueAnimator animation) {
-                            clipViewToGlobalBounds(animatingView);
-                            animatingView.getLayoutParams().height = (int) animation.getAnimatedValue();
-                            animatingView.requestLayout();
-                        }
-                    });
-
-                    AnimatorSet set = new AnimatorSet();
-                    set.play(ObjectAnimator.ofFloat(animatingView, View.X, finalBounds.left, startBounds.left))
-                            .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
-                            .with(widthAnimator).with(heightAnimator);
-                    set.setDuration(ANIM_DURATION);
-                    set.setInterpolator(INTERPOLATOR);
-                    set.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            initialView.setAlpha(1f);
-                            animatingView.setVisibility(View.GONE);
-                            mCurrentAnimator = null;
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        mCurrentAnimator = null;
+                        animatingView.setVisibility(View.GONE);
+                    }
+                });
+                expandView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (mCurrentAnimator != null) {
+                            mCurrentAnimator.cancel();
                         }
 
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-                            initialView.setAlpha(1f);
-                            animatingView.setVisibility(View.GONE);
-                            mCurrentAnimator = null;
-                        }
-                    });
+                        animatingView.setVisibility(View.VISIBLE);
+                        expandView.setVisibility(View.GONE);
 
-                    set.start();
-                    mCurrentAnimator = set;
-                }
-            });
-        }
+                        ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
+                        widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                            @Override
+                            public void onAnimationUpdate(ValueAnimator animation) {
+                                clipViewToGlobalBounds(animatingView);
+                                animatingView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                                animatingView.requestLayout();
+                            }
+                        });
+                        ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height(), previewDimen);
+                        heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                            @Override
+                            public void onAnimationUpdate(ValueAnimator animation) {
+                                clipViewToGlobalBounds(animatingView);
+                                animatingView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                                animatingView.requestLayout();
+                            }
+                        });
 
-        private void expandVideoView(final View initialView, final VideoView expandView) {
-            final int ANIM_DURATION = 1000;
-
-            final Rect startBounds = new Rect();
-            final Rect finalBounds = new Rect();
-            final Point globalOffset = new Point();
-            final int HEIGHT_OFFSET = 75;
-
-            initialView.getGlobalVisibleRect(startBounds);
-            mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
-            startBounds.offset(-globalOffset.x, -globalOffset.y);
-            finalBounds.offset(-globalOffset.x, -globalOffset.y);
-
-            if (mCurrentAnimator != null) {
-                mCurrentAnimator.cancel();
-            }
-
-            initialView.setAlpha(0f);
-
-            expandView.setVisibility(ImageView.VISIBLE);
-            expandView.setPivotX(0f);
-            expandView.setPivotY(0f);
-
-            ValueAnimator widthAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.width());
-            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    clipViewToGlobalBounds(expandView);
-                    expandView.getLayoutParams().width = (int) animation.getAnimatedValue();
-                    expandView.requestLayout();
-                }
-            });
-            ValueAnimator heightAnimator =
-                    ValueAnimator.ofInt(previewDimen, finalBounds.height() + HEIGHT_OFFSET);
-            heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    clipViewToGlobalBounds(expandView);
-                    expandView.getLayoutParams().height = (int) animation.getAnimatedValue();
-                    expandView.requestLayout();
-                }
-            });
-
-            AnimatorSet set = new AnimatorSet();
-            set.play(ObjectAnimator.ofFloat(expandView, View.X, startBounds.left, finalBounds.left))
-                    .with(ObjectAnimator.ofFloat(expandView, View.Y, startBounds.top, finalBounds.top))
-                    .with(widthAnimator).with(heightAnimator);
-            set.setDuration(ANIM_DURATION);
-            set.setInterpolator(INTERPOLATOR);
-            set.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mCurrentAnimator = null;
-                    expandView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        @Override
-                        public void onCompletion(MediaPlayer mp) {
-                            if (mCurrentAnimator != null) {
-                                mCurrentAnimator.cancel();
+                        AnimatorSet set = new AnimatorSet();
+                        set.play(ObjectAnimator.ofFloat(animatingView, View.X, finalBounds.left, startBounds.left))
+                                .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
+                                .with(widthAnimator).with(heightAnimator);
+                        set.setDuration(ANIM_DURATION);
+                        set.setInterpolator(INTERPOLATOR);
+                        set.addListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                initialView.setAlpha(1f);
+                                animatingView.setVisibility(View.GONE);
+                                mCurrentAnimator = null;
                             }
 
-                            ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
-                            widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                                @Override
-                                public void onAnimationUpdate(ValueAnimator animation) {
-                                    clipViewToGlobalBounds(expandView);
-                                    expandView.getLayoutParams().width = (int) animation.getAnimatedValue();
-                                    expandView.requestLayout();
-                                }
-                            });
-                            ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height() + HEIGHT_OFFSET, previewDimen);
-                            heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                                @Override
-                                public void onAnimationUpdate(ValueAnimator animation) {
-                                    clipViewToGlobalBounds(expandView);
-                                    expandView.getLayoutParams().height = (int) animation.getAnimatedValue();
-                                    expandView.requestLayout();
-                                }
-                            });
+                            @Override
+                            public void onAnimationCancel(Animator animation) {
+                                initialView.setAlpha(1f);
+                                animatingView.setVisibility(View.GONE);
+                                mCurrentAnimator = null;
+                            }
+                        });
 
-                            AnimatorSet set = new AnimatorSet();
-                            set.play(ObjectAnimator.ofFloat(expandView, View.X, finalBounds.left, startBounds.left))
-                                    .with(ObjectAnimator.ofFloat(expandView, View.Y, finalBounds.top, startBounds.top))
-                                    .with(widthAnimator).with(heightAnimator);
-                            set.setDuration(ANIM_DURATION);
-                            set.setInterpolator(INTERPOLATOR);
-                            set.addListener(new AnimatorListenerAdapter() {
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    initialView.setAlpha(1f);
-                                    expandView.setVisibility(View.GONE);
-                                    mCurrentAnimator = null;
+                        set.start();
+                        mCurrentAnimator = set;
+                    }
+                });
+            } else if (expandView instanceof VideoView) {
+                set.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        mCurrentAnimator = null;
+                        animatingView.setVisibility(View.GONE);
+                        expandView.setVisibility(View.VISIBLE);
+
+                        VideoView expandVideoView = (VideoView) expandView;
+                        expandVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                if (mCurrentAnimator != null) {
+                                    mCurrentAnimator.cancel();
                                 }
 
-                                @Override
-                                public void onAnimationCancel(Animator animation) {
-                                    initialView.setAlpha(1f);
-                                    expandView.setVisibility(View.GONE);
-                                    mCurrentAnimator = null;
-                                }
-                            });
+                                animatingView.setVisibility(View.VISIBLE);
+                                expandView.setVisibility(View.GONE);
 
-                            set.start();
-                            mCurrentAnimator = set;
-                        }
-                    });
-                    expandView.start();
-                }
+                                ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
+                                widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                    @Override
+                                    public void onAnimationUpdate(ValueAnimator animation) {
+                                        clipViewToGlobalBounds(animatingView);
+                                        animatingView.getLayoutParams().width = (int) animation.getAnimatedValue();
+                                        animatingView.requestLayout();
+                                    }
+                                });
+                                ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height(), previewDimen);
+                                heightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                    @Override
+                                    public void onAnimationUpdate(ValueAnimator animation) {
+                                        clipViewToGlobalBounds(animatingView);
+                                        animatingView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                                        animatingView.requestLayout();
+                                    }
+                                });
 
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    mCurrentAnimator = null;
-                }
-            });
+                                AnimatorSet set = new AnimatorSet();
+                                set.play(ObjectAnimator.ofFloat(animatingView, View.X, finalBounds.left, startBounds.left))
+                                        .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
+                                        .with(widthAnimator).with(heightAnimator);
+                                set.setDuration(ANIM_DURATION);
+                                set.setInterpolator(INTERPOLATOR);
+                                set.addListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        initialView.setAlpha(1f);
+                                        animatingView.setVisibility(View.GONE);
+                                        mCurrentAnimator = null;
+                                    }
+
+                                    @Override
+                                    public void onAnimationCancel(Animator animation) {
+                                        initialView.setAlpha(1f);
+                                        animatingView.setVisibility(View.GONE);
+                                        mCurrentAnimator = null;
+                                    }
+                                });
+
+                                set.start();
+                                mCurrentAnimator = set;
+                            }
+                        });
+                        expandVideoView.start();
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        mCurrentAnimator = null;
+                        animatingView.setVisibility(View.GONE);
+                    }
+                });
+            }
 
             set.start();
             mCurrentAnimator = set;
