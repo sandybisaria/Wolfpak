@@ -65,16 +65,17 @@ public class LeaderboardActivity extends Activity {
                                 for (LeaderboardListItem freshListItem : freshListItems) {
                                     for (LeaderboardListItem currentListItem : listItems) {
                                         if (freshListItem.getId() == currentListItem.getId()) {
-                                            freshListItems.add(freshListItems.indexOf(freshListItem), currentListItem);
+                                            currentListItem.setStatus(LeaderboardListItem.VoteStatus.NOT_VOTED);
+                                            currentListItem.setVoteCount(freshListItem.getVoteCount());
                                             break;
                                         }
                                     }
                                 }
-                                listItems = freshListItems;
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+
                         mAdapter.notifyDataSetChanged();
                         mLayout.setRefreshing(false);
                     }

@@ -29,6 +29,7 @@ import android.widget.VideoView;
 
 import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak.R;
+import com.wolfpakapp.wolfpak.WolfpakLikeClient;
 
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +109,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
-
         this.recyclerView = recyclerView;
     }
 
@@ -158,7 +158,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             listItemTextView.setText(listItem.getContentString());
 
-            listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
+            updateViewCountBackground(listItem.getStatus());
             listItemViewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
 
             contentLayout.removeAllViews();
@@ -204,16 +204,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-
                 final int action = MotionEventCompat.getActionMasked(event);
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN: {
                         mLayout.setEnabled(false);
 
-//                        final int pointerIndex = MotionEventCompat.getActionIndex(event);
-                        final float x = event.getRawX(); //MotionEventCompat.getX(event, pointerIndex);
-                        final float y = event.getRawY(); //MotionEventCompat.getY(event, pointerIndex);
+                        final float x = event.getRawX();
+                        final float y = event.getRawY();
 
                         lastTouchX = x;
                         lastTouchY = y;
@@ -225,23 +223,16 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         initialViewX = v.getX();
                         initialViewY = v.getY();
 
-//                        String s = Float.toString(lastTouchX) + " " + Float.toString(lastTouchY) +
-//                                " " + Float.toString(initialViewX) + " " + Float.toString(initialViewY);
-//                        Log.d("TEST", s);
-
                         final int indexOfFrontChild = recyclerView.indexOfChild(listItemView);
                         recyclerView.setChildDrawingOrderCallback(new RecyclerView.ChildDrawingOrderCallback() {
                             private int nextChildIndexToRender;
                             @Override
                             public int onGetChildDrawingOrder(int childCount, int iteration) {
                                 if (iteration == childCount - 1) {
-                                    // in the last iteration return the index of the child
-                                    // we want to bring to front (and reset nextChildIndexToRender)
                                     nextChildIndexToRender = 0;
                                     return indexOfFrontChild;
                                 } else {
                                     if (nextChildIndexToRender == indexOfFrontChild) {
-                                        // skip this index; we will render it during last iteration
                                         nextChildIndexToRender++;
                                     }
                                     return nextChildIndexToRender++;
@@ -253,9 +244,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         break;
                     }
                     case MotionEvent.ACTION_MOVE: {
-//                        final int pointerIndex = MotionEventCompat.findPointerIndex(event, activePointerId);
-                        final float x = event.getRawX(); //MotionEventCompat.getX(event, pointerIndex);
-                        final float y = event.getRawY(); //MotionEventCompat.getY(event, pointerIndex);
+                        final float x = event.getRawX();
+                        final float y = event.getRawY();
 
                         final float dx = x - lastTouchX;
                         final float dy = y - lastTouchY;
@@ -263,22 +253,19 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         v.setX(v.getX() + dx);
                         v.setY(v.getY() + dy);
 
-                        GradientDrawable bg = (GradientDrawable) v.getResources().getDrawable(R.drawable.leaderboard_item_view_count_background);
                         if (v.getY() < initialViewY) {
                             if (listItem.getStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
-                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_grey));
+                                updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
                             } else {
-                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_green));
+                                updateViewCountBackground(LeaderboardListItem.VoteStatus.UPVOTED);
                             }
                         } else if (v.getY() > initialViewY) {
                             if (listItem.getStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
-                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_grey));
+                                updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
                             } else {
-                                bg.setColor(v.getResources().getColor(R.color.leaderboard_view_count_background_red));
+                                updateViewCountBackground(LeaderboardListItem.VoteStatus.DOWNVOTED);
                             }
                         }
-                        v.setBackground(bg);
-                        v.invalidate();
 
                         lastTouchX = x;
                         lastTouchY = y;
@@ -290,8 +277,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
                         if (pointerId == activePointerId) {
                             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                            lastTouchX = event.getRawX(); //MotionEventCompat.getX(event, pointerIndex);
-                            lastTouchY = event.getRawY(); //MotionEventCompat.getY(event, pointerIndex);
+                            lastTouchX = event.getRawX();
+                            lastTouchY = event.getRawY();
                             activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
                         }
 
@@ -302,23 +289,25 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     case MotionEvent.ACTION_UP: {
                         mLayout.setEnabled(true);
 
-                        GradientDrawable bg = (GradientDrawable) v.getResources().getDrawable(R.drawable.leaderboard_item_view_count_background);
+                        LeaderboardListItem.VoteStatus newStatus = null;
                         if (v.getY() < initialViewY) {
                             if (listItem.getStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
-                                listItem.setStatus(LeaderboardListItem.VoteStatus.NOT_VOTED);
+                                newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
                             } else {
-                                listItem.setStatus(LeaderboardListItem.VoteStatus.UPVOTED);
+                                newStatus = LeaderboardListItem.VoteStatus.UPVOTED;
                             }
                         } else if (v.getY() > initialViewY) {
                             if (listItem.getStatus() == LeaderboardListItem.VoteStatus.DOWNVOTED) {
-                                listItem.setStatus(LeaderboardListItem.VoteStatus.NOT_VOTED);
+                                newStatus = LeaderboardListItem.VoteStatus.NOT_VOTED;
                             } else {
-                                listItem.setStatus(LeaderboardListItem.VoteStatus.DOWNVOTED);
+                                newStatus = LeaderboardListItem.VoteStatus.DOWNVOTED;
                             }
                         }
-                        v.setBackground(bg);
-                        listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
-                        v.invalidate();
+
+                        listItem.setStatus(newStatus);
+                        updateViewCountBackground(newStatus);
+
+                        WolfpakLikeClient.updateVoteStatus(listItem.getId(), newStatus);
 
                         activePointerId = MotionEvent.INVALID_POINTER_ID;
 
@@ -340,6 +329,22 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                 return true;
             }
+        }
+
+        /**
+         * Update the ViewCountTextView. Sets the background color based on the given VoteStatus,
+         * but does NOT update the {@link LeaderboardListItem} VoteStatus! Updates the view count so
+         * that it reflects the LeaderboardListItem's CURRENT VoteStatus.
+         * @param status The VoteStatus that determines the View's background color.
+         */
+        private void updateViewCountBackground(LeaderboardListItem.VoteStatus status) {
+            GradientDrawable bg = (GradientDrawable) listItemViewCountTextView.getResources()
+                    .getDrawable(R.drawable.leaderboard_item_view_count_background);
+            int statusColor = status.getStatusColor(mActivity);
+            bg.setColor(statusColor);
+            listItemViewCountTextView.setBackground(bg);
+            listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
+            listItemViewCountTextView.invalidate();
         }
 
         /**
@@ -438,7 +443,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     .with(widthAnimator).with(heightAnimator);
             set.setDuration(ANIM_DURATION);
             set.setInterpolator(INTERPOLATOR);
-            if (expandView instanceof ImageView) {
+            if (listItem.isImage()) {
                 set.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
@@ -508,7 +513,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         mCurrentAnimator = set;
                     }
                 });
-            } else if (expandView instanceof VideoView) {
+            } else {
                 set.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {

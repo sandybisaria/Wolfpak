@@ -1,5 +1,12 @@
 package com.wolfpakapp.wolfpak.leaderboard;
 
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Color;
+
+import com.wolfpakapp.wolfpak.R;
+import com.wolfpakapp.wolfpak.WolfpakLikeClient;
+
 public class LeaderboardListItem {
     private int id;
     private String contentString;
@@ -25,6 +32,22 @@ public class LeaderboardListItem {
 
         VoteStatus(int change) {
             this.change = change;
+        }
+
+        int getStatusColor(Context context) {
+            Resources resources = context.getResources();
+            switch (this) {
+                case UPVOTED: {
+                    return resources.getColor(R.color.leaderboard_view_count_background_green);
+                }
+                case DOWNVOTED: {
+                    return resources.getColor(R.color.leaderboard_view_count_background_red);
+                }
+                case NOT_VOTED:
+                default: {
+                    return resources.getColor(R.color.leaderboard_view_count_background_grey);
+                }
+            }
         }
     }
 
