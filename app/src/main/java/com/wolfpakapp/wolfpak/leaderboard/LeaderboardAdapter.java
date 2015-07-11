@@ -158,11 +158,13 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             listItemTextView.setText(listItem.getContentString());
 
+            // Ensure that the view count is the correct color
             updateViewCountBackground(listItem.getStatus());
             listItemViewCountTextView.setOnTouchListener(new ViewCountOnTouchListener());
 
             contentLayout.removeAllViews();
 
+            // Load the content into the appropriate thumnbnail view and add it to the layout
             if (listItem.isImage()) {
                 listItemImageView = new ImageView(mActivity);
                 listItemImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -199,6 +201,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             private float initialViewX;
             private float initialViewY;
 
+            private int ANIM_DURATION = 350;
+
             float lastTouchX = 0;
             float lastTouchY = 0;
 
@@ -208,6 +212,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN: {
+                        // When a finger presses on the view count, store the original location of
+                        // the View and record the pointer ID of the finger.
                         mLayout.setEnabled(false);
 
                         final float x = event.getRawX();
@@ -218,11 +224,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                         activePointerId = MotionEventCompat.getPointerId(event, 0);
 
+                        // Ensure that the View receives touch events before any elements under it.
                         v.getParent().requestDisallowInterceptTouchEvent(true);
 
                         initialViewX = v.getX();
                         initialViewY = v.getY();
 
+                        // Ensure that the RecyclerView draws the listItemView containing the view
+                        // count before all other listItemViews.
                         final int indexOfFrontChild = recyclerView.indexOfChild(listItemView);
                         recyclerView.setChildDrawingOrderCallback(new RecyclerView.ChildDrawingOrderCallback() {
                             private int nextChildIndexToRender;
@@ -247,12 +256,15 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         final float x = event.getRawX();
                         final float y = event.getRawY();
 
+                        // Calculate the change in pointer position.
                         final float dx = x - lastTouchX;
                         final float dy = y - lastTouchY;
 
+                        // Adjusts the view count based on dx and dy.
                         v.setX(v.getX() + dx);
                         v.setY(v.getY() + dy);
 
+                        // Update the color of the view count.
                         if (v.getY() < initialViewY) {
                             if (listItem.getStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
                                 updateViewCountBackground(LeaderboardListItem.VoteStatus.NOT_VOTED);
@@ -273,8 +285,11 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         break;
                     }
                     case MotionEvent.ACTION_POINTER_UP: {
+                        // When a finger is lifted (but not the last finger)
                         final int pointerIndex = MotionEventCompat.getActionIndex(event);
                         final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
+                        // Ensure that the correct pointer ID is being used (in case the view
+                        // switched pointers
                         if (pointerId == activePointerId) {
                             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
                             lastTouchX = event.getRawX();
@@ -289,6 +304,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     case MotionEvent.ACTION_UP: {
                         mLayout.setEnabled(true);
 
+                        // Determine the new VoteStatus of the post.
                         LeaderboardListItem.VoteStatus newStatus = null;
                         if (v.getY() < initialViewY) {
                             if (listItem.getStatus() == LeaderboardListItem.VoteStatus.UPVOTED) {
@@ -303,26 +319,26 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                 newStatus = LeaderboardListItem.VoteStatus.DOWNVOTED;
                             }
                         }
-
+                        // Update the post's VoteStatus and the view count background.
                         listItem.setStatus(newStatus);
                         updateViewCountBackground(newStatus);
 
+                        // Update the vote status of the post on the server.
                         WolfpakLikeClient.updateVoteStatus(listItem.getId(), newStatus);
 
                         activePointerId = MotionEvent.INVALID_POINTER_ID;
 
+                        // Animate the view count so that it returns to the starting position.
+                        AnimatorSet animatorSet = new AnimatorSet();
                         ObjectAnimator xAnim = ObjectAnimator.ofFloat(v, "X", v.getX(), initialViewX);
                         ObjectAnimator yAnim = ObjectAnimator.ofFloat(v, "Y", v.getY(), initialViewY);
+                        animatorSet.play(xAnim).with(yAnim);
+                        animatorSet.setDuration(ANIM_DURATION);
+                        animatorSet.setInterpolator(INTERPOLATOR);
 
-                        xAnim.setDuration(350);
-                        yAnim.setDuration(350);
+                        animatorSet.start();
 
-                        xAnim.setInterpolator(INTERPOLATOR);
-                        yAnim.setInterpolator(INTERPOLATOR);
-
-                        xAnim.start();
-                        yAnim.start();
-
+                        // Reset the RecyclerView's drawing order of the posts.
                         recyclerView.setChildDrawingOrderCallback(null);
                     }
                 }
