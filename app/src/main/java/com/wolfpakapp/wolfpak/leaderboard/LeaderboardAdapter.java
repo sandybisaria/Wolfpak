@@ -419,6 +419,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             final Point globalOffset = new Point();
 //            final int HEIGHT_OFFSET = 75;
 
+            mActivity.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+
             initialView.getGlobalVisibleRect(startBounds);
             mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
             startBounds.offset(-globalOffset.x, -globalOffset.y);
@@ -527,6 +529,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                         set.start();
                         mCurrentAnimator = set;
+
+                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
                     }
                 });
             } else {
@@ -596,6 +600,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                                 set.start();
                                 mCurrentAnimator = set;
+
+                                mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
                             }
                         });
 
@@ -606,6 +612,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     public void onAnimationCancel(Animator animation) {
                         mCurrentAnimator = null;
                         animatingView.setVisibility(View.GONE);
+
+                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
                     }
                 });
             }
