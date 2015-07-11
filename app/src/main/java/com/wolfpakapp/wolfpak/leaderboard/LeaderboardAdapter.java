@@ -15,6 +15,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -47,7 +48,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     private List<LeaderboardListItem> listItems;
     private RecyclerView recyclerView;
     private SwipeRefreshLayout mLayout;
-    private Activity mActivity;
+    private LeaderboardActivity mActivity;
 
     private ImageView animatingView;
     private Animator mCurrentAnimator;
@@ -58,7 +59,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
      * @param mActivity The Activity which created the Adapter
      * @param listItems The List of LeaderboardListItem objects
      */
-    public LeaderboardAdapter(Activity mActivity, List<LeaderboardListItem> listItems) {
+    public LeaderboardAdapter(LeaderboardActivity mActivity, List<LeaderboardListItem> listItems) {
         this.listItems = listItems;
         this.mActivity = mActivity;
         mLayout = (SwipeRefreshLayout) mActivity.findViewById(R.id.leaderboard_swipe_refresh_layout);
@@ -139,7 +140,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             super(view);
 
             listItemView = view;
-            mActivity = (Activity) listItemView.getContext();
 
             listItemTextView = (TextView) listItemView.findViewById(R.id.leaderboard_item_text_view);
             listItemViewCountTextView = (TextView) listItemView.findViewById(R.id.leaderboard_item_view_count_text_view);
