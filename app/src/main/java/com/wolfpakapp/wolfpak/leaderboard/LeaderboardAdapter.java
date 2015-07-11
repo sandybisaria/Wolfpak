@@ -343,7 +343,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             int statusColor = status.getStatusColor(mActivity);
             bg.setColor(statusColor);
             listItemViewCountTextView.setBackground(bg);
-            listItemViewCountTextView.setText(Integer.toString(listItem.getVoteCount()));
+            listItemViewCountTextView.setText(Integer.toString(listItem.getUpdatedVoteCount()));
             listItemViewCountTextView.invalidate();
         }
 

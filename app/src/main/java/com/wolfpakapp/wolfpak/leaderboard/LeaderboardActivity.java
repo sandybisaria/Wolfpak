@@ -2,7 +2,6 @@ package com.wolfpakapp.wolfpak.leaderboard;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -42,6 +41,36 @@ public class LeaderboardActivity extends Activity {
 
         final SwipeRefreshLayout mLayout =
             (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);
+
+        WolfpakRestClient.get("posts/leaderboard/", null, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                final JSONArray resArray;
+                try {
+                    resArray = new JSONArray(new String(bytes));
+                    for (int idx = 0; idx < resArray.length(); idx++) {
+                        JSONObject listItemObject = resArray.getJSONObject(idx);
+
+                        boolean isImage = listItemObject.optBoolean("is_image");
+                        int id = listItemObject.optInt("id");
+                        String handle = listItemObject.optString("handle");
+                        int originalVoteCount = listItemObject.optInt("likes");
+                        String mediaUrl = listItemObject.optString("media_url");
+
+                        listItems.add(new LeaderboardListItem(id, handle, originalVoteCount, mediaUrl, isImage));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                mAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                Toast.makeText(LeaderboardActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         mLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -58,15 +87,15 @@ public class LeaderboardActivity extends Activity {
                                 boolean isImage = listItemObject.optBoolean("is_image");
                                 int id = listItemObject.optInt("id");
                                 String handle = listItemObject.optString("handle");
-                                int voteCount = listItemObject.optInt("likes");
+                                int originalVoteCount = listItemObject.optInt("likes");
                                 String mediaUrl = listItemObject.optString("media_url");
 
-                                freshListItems.add(new LeaderboardListItem(id, handle, voteCount, mediaUrl, isImage));
+                                freshListItems.add(new LeaderboardListItem(id, handle, originalVoteCount, mediaUrl, isImage));
                                 for (LeaderboardListItem freshListItem : freshListItems) {
                                     for (LeaderboardListItem currentListItem : listItems) {
                                         if (freshListItem.getId() == currentListItem.getId()) {
                                             currentListItem.setStatus(LeaderboardListItem.VoteStatus.NOT_VOTED);
-                                            currentListItem.setVoteCount(freshListItem.getVoteCount());
+                                            currentListItem.setOriginalVoteCount(freshListItem.getOriginalVoteCount());
                                             break;
                                         }
                                     }
@@ -86,35 +115,6 @@ public class LeaderboardActivity extends Activity {
                         mLayout.setRefreshing(false);
                     }
                 });
-            }
-        });
-
-        WolfpakRestClient.get("posts/leaderboard/", null, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                final JSONArray resArray;
-                try {
-                    resArray = new JSONArray(new String(bytes));
-                    for (int idx = 0; idx < resArray.length(); idx++) {
-                        JSONObject listItemObject = resArray.getJSONObject(idx);
-
-                        boolean isImage = listItemObject.optBoolean("is_image");
-                        int id = listItemObject.optInt("id");
-                        String handle = listItemObject.optString("handle");
-                        int voteCount = listItemObject.optInt("likes");
-                        String mediaUrl = listItemObject.optString("media_url");
-
-                        listItems.add(new LeaderboardListItem(id, handle, voteCount, mediaUrl, isImage));
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                mAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
-                Toast.makeText(LeaderboardActivity.this, "Failed", Toast.LENGTH_SHORT).show();
             }
         });
     }

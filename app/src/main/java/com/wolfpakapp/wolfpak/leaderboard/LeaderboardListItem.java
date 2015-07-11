@@ -2,25 +2,23 @@ package com.wolfpakapp.wolfpak.leaderboard;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Color;
 
 import com.wolfpakapp.wolfpak.R;
-import com.wolfpakapp.wolfpak.WolfpakLikeClient;
 
 public class LeaderboardListItem {
     private int id;
     private String contentString;
-    private final int originalVoteCount;
-    private int voteCount;
+    private int originalVoteCount;
+    private int updatedVoteCount;
     private VoteStatus status;
     private String url;
     private boolean isImage;
 
-    public LeaderboardListItem(int id, String contentString, int voteCount, String url, boolean isImage) {
+    public LeaderboardListItem(int id, String contentString, int originalVoteCount, String url, boolean isImage) {
         this.id = id;
         this.contentString = contentString;
-        originalVoteCount = voteCount;
-        this.voteCount = voteCount;
+        this.originalVoteCount = originalVoteCount;
+        updatedVoteCount = originalVoteCount;
         this.url = url;
         this.status = VoteStatus.NOT_VOTED;
         this.isImage = isImage;
@@ -75,12 +73,13 @@ public class LeaderboardListItem {
         this.id = id;
     }
 
-    public int getVoteCount() {
-        return voteCount;
+    public int getOriginalVoteCount() {
+        return originalVoteCount;
     }
 
-    public void setVoteCount(int voteCount) {
-        this.voteCount = voteCount;
+    public void setOriginalVoteCount(int originalVoteCount) {
+        this.originalVoteCount = originalVoteCount;
+        setStatus(status);
     }
 
     public VoteStatus getStatus() {
@@ -88,12 +87,12 @@ public class LeaderboardListItem {
     }
 
     public void setStatus(VoteStatus status) {
-        voteCount = originalVoteCount + status.change;
+        updatedVoteCount = originalVoteCount + status.change;
         this.status = status;
     }
 
-    public int getOriginalVoteCount() {
-        return originalVoteCount;
+    public int getUpdatedVoteCount() {
+        return updatedVoteCount;
     }
 
     public boolean isImage() {
