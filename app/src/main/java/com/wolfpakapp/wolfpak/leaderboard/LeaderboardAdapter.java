@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
@@ -370,11 +371,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         private final class ImageViewOnClickListener implements View.OnClickListener {
             @Override
             public void onClick(final View view) {
-                final ImageView expandedImageView = (ImageView) mActivity.findViewById(R.id.leaderboard_expanded_image_view);
+                final ImageView expandedImageView = mActivity.getExpandedImageView();
+
                 Picasso.with(mActivity).load(listItem.getUrl()).into(expandedImageView);
                 Picasso.with(mActivity).load(listItem.getUrl()).into(animatingView);
 
-                animateView(view, expandedImageView);
+                animateView(listItemImageView, expandedImageView);
             }
         }
 
@@ -395,6 +397,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
                         mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
                         Bitmap frame = mRetriever.getFrameAtTime(0);
+
                         animatingView.setImageBitmap(frame);
 
                         animateView(listItemVideoView, expandedVideoView);
@@ -412,6 +415,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          *                   and a VideoView when a VideoView was touched.
          */
         private void animateView(final View initialView, final View expandView) {
+
+
             final int ANIM_DURATION = 1000;
 
             final Rect startBounds = new Rect();
@@ -419,7 +424,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             final Point globalOffset = new Point();
 //            final int HEIGHT_OFFSET = 75;
 
-            mActivity.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+//            mActivity.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+//            mActivity.getSupportActionBar().hide();
 
             initialView.getGlobalVisibleRect(startBounds);
             mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
@@ -530,7 +536,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         set.start();
                         mCurrentAnimator = set;
 
-                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+                        //mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+                        //mActivity.getSupportActionBar().show();
                     }
                 });
             } else {
@@ -601,7 +608,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                 set.start();
                                 mCurrentAnimator = set;
 
-                                mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+                                //mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+                                //mActivity.getSupportActionBar().show();
                             }
                         });
 
@@ -613,7 +621,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         mCurrentAnimator = null;
                         animatingView.setVisibility(View.GONE);
 
-                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+                        //mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+                        //mActivity.getSupportActionBar().show();
                     }
                 });
             }

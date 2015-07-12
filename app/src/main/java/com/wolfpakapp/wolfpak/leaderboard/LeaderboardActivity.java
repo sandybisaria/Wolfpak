@@ -3,10 +3,14 @@ package com.wolfpakapp.wolfpak.leaderboard;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -21,9 +25,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class LeaderboardActivity extends Activity {
+public class LeaderboardActivity extends ActionBarActivity {
     private List<LeaderboardListItem> listItems;
     private LeaderboardAdapter mAdapter;
+
+    private ImageView expandedImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +47,7 @@ public class LeaderboardActivity extends Activity {
 
         final SwipeRefreshLayout mLayout =
             (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);
+        mLayout.setColorSchemeResources(R.color.wolfpak_red);
 
         WolfpakRestClient.get("posts/leaderboard/", null, new AsyncHttpResponseHandler() {
             @Override
@@ -122,6 +129,19 @@ public class LeaderboardActivity extends Activity {
                 });
             }
         });
+
+        expandedImageView = new ImageView(this);
+        expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        expandedImageView.setVisibility(View.GONE);
+
+        WindowManager manager = getWindowManager();
+
+        WindowManager.LayoutParams expandedParams = new WindowManager.LayoutParams();
+        expandedParams.height = WindowManager.LayoutParams.MATCH_PARENT;
+        expandedParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+        expandedParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+
+        manager.addView(expandedImageView, expandedParams);
     }
 
     @Override
@@ -144,5 +164,9 @@ public class LeaderboardActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public ImageView getExpandedImageView() {
+        return expandedImageView;
     }
 }
