@@ -27,7 +27,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class LeaderboardActivity extends AppCompatActivity {
@@ -116,11 +115,6 @@ public class LeaderboardActivity extends AppCompatActivity {
                                         if (freshListItem.getId() == currentListItem.getId()) {
                                             currentListItem.setStatus(LeaderboardListItem.VoteStatus.NOT_VOTED);
                                             currentListItem.setOriginalVoteCount(freshListItem.getOriginalVoteCount());
-
-                                            if (freshListItems.indexOf(freshListItem) != listItems.indexOf(currentListItem)) {
-                                                Collections.swap(listItems, freshListItems.indexOf(freshListItem), listItems.indexOf(currentListItem));
-                                            }
-
                                             break;
                                         }
                                     }
