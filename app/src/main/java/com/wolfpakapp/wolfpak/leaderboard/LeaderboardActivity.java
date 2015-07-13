@@ -166,13 +166,13 @@ public class LeaderboardActivity extends AppCompatActivity {
         // Allows the expanded View to be drawn over the Action Bar and notification area
 //        expandedParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
         // Ensures that the expanded View is positioned over the Action Bar and notification area
-        expandedParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+        expandedParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
 //        expandedParams.format = PixelFormat.TRANSLUCENT;
 //        expandedParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
 
         // In order for the animatingImageView to be animate-able, it must be contained in a layout
         WindowManager.LayoutParams animatingContainerParams = new WindowManager.LayoutParams();
-        animatingContainerParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+//        animatingContainerParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
         // The layout (and thus the animation) can not be interacted with
         animatingContainerParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
@@ -221,5 +221,10 @@ public class LeaderboardActivity extends AppCompatActivity {
 
     public RelativeLayout getAnimatingContainer() {
         return animatingContainer;
+    }
+
+    public void setAnimationVisibility(int visibility) {
+        animatingContainer.setVisibility(visibility);
+        animatingImageView.setVisibility(visibility);
     }
 }

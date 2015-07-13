@@ -418,34 +418,27 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          */
         private void animateView(final View initialView, final View expandView) {
             final int ANIM_DURATION = 500;
+            final int TRANSITION_DELAY = 200;
             final Interpolator THUMBNAIL_EXPANDING_INTERPOLATOR = new LinearInterpolator();
 
             final Rect startBounds = new Rect();
-            final Rect finalBounds = new Rect();
-            final Point globalOffset = new Point(0, 0);
+            final Rect finalBounds = new Rect(0, 0, 1080, 1920);
+//            final Point globalOffset = new Point(0, 0);
 
             final ImageView animatingView = mActivity.getAnimatingImageView();
-//            final int HEIGHT_OFFSET = 75;
-
-//            mActivity.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-//            mActivity.getSupportActionBar().hide();
 
             initialView.getGlobalVisibleRect(startBounds);
             expandView.getGlobalVisibleRect(finalBounds);
-            startBounds.offset(-globalOffset.x, -globalOffset.y);
-            finalBounds.offset(-globalOffset.x, -globalOffset.y);
-
-            Log.d("START", startBounds.toString());
-            Log.d("FINAL", finalBounds.toString());
+//            startBounds.offset(-globalOffset.x, -globalOffset.y);
+//            finalBounds.offset(-globalOffset.x, -globalOffset.y);
 
             if (mCurrentAnimator != null) {
                 mCurrentAnimator.cancel();
             }
 
-            initialView.setAlpha(0f);
+//            initialView.setAlpha(0f);
 
-            mActivity.getAnimatingContainer().setVisibility(ImageView.VISIBLE);
-            animatingView.setVisibility(ImageView.VISIBLE);
+            mActivity.setAnimationVisibility(View.VISIBLE);
 
             ValueAnimator widthAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.width());
             widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -479,22 +472,21 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     public void onAnimationEnd(Animator animation) {
                         mCurrentAnimator = null;
                         expandView.setVisibility(View.VISIBLE);
+                        expandView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+//                        mActivity.getSupportActionBar().hide();
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                mActivity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                                mActivity.getSupportActionBar().hide();
-                                mActivity.getAnimatingContainer().setVisibility(View.GONE);
-                                animatingView.setVisibility(View.GONE);
+                                mActivity.setAnimationVisibility(View.GONE);
                             }
-                        }, 250);
+                        }, TRANSITION_DELAY);
+
                     }
 
                     @Override
                     public void onAnimationCancel(Animator animation) {
                         mCurrentAnimator = null;
-                        animatingView.setVisibility(View.GONE);
+                        mActivity.setAnimationVisibility(View.GONE);
                     }
                 });
                 expandView.setOnClickListener(new View.OnClickListener() {
@@ -504,8 +496,9 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                             mCurrentAnimator.cancel();
                         }
 
-                        mActivity.getAnimatingContainer().setVisibility(ImageView.VISIBLE);
-                        animatingView.setVisibility(View.VISIBLE);
+                        mActivity.setAnimationVisibility(View.VISIBLE);
+                        animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+//                        mActivity.getSupportActionBar().show();
 
                         ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
                         widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -536,35 +529,28 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         set.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
-                                initialView.setAlpha(1f);
-                                mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
-                                animatingView.setVisibility(View.GONE);
+//                                initialView.setAlpha(1f);
+                                mActivity.setAnimationVisibility(View.GONE);
                                 mCurrentAnimator = null;
                             }
 
                             @Override
                             public void onAnimationCancel(Animator animation) {
-                                initialView.setAlpha(1f);
-                                mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
-                                animatingView.setVisibility(View.GONE);
+//                                initialView.setAlpha(1f);
+                                mActivity.setAnimationVisibility(View.GONE);
                                 mCurrentAnimator = null;
                             }
                         });
 
-                        mActivity.getWindow().setFlags(0, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                        mActivity.getSupportActionBar().show();
-
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                expandView.setVisibility(View.GONE);
                                 set.start();
                                 mCurrentAnimator = set;
+                                expandView.setVisibility(View.GONE);
+                                animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
                             }
-                        }, 250);
-
-//                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
-//                        mActivity.getSupportActionBar().show();
+                        }, TRANSITION_DELAY);
                     }
                 });
             } else {
