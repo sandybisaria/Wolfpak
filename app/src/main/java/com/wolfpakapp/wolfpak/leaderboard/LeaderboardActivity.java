@@ -30,6 +30,7 @@ public class LeaderboardActivity extends ActionBarActivity {
     private LeaderboardAdapter mAdapter;
 
     private ImageView expandedImageView;
+    private ImageView animatingImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

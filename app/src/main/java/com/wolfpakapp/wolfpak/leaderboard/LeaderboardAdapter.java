@@ -54,6 +54,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     private ImageView animatingView;
     private Animator mCurrentAnimator;
     private final Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
+    // TODO Make expanding animation LINEAR!
 
     /**
      * Instantiate a new LeaderboardAdapter with the given List of LeaderboardListItem objects
@@ -415,8 +416,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          *                   and a VideoView when a VideoView was touched.
          */
         private void animateView(final View initialView, final View expandView) {
-
-
             final int ANIM_DURATION = 1000;
 
             final Rect startBounds = new Rect();
@@ -472,8 +471,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         mCurrentAnimator = null;
-                        animatingView.setVisibility(View.GONE);
                         expandView.setVisibility(View.VISIBLE);
+                        animatingView.setVisibility(View.GONE);
                     }
 
                     @Override
@@ -536,8 +535,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         set.start();
                         mCurrentAnimator = set;
 
-                        //mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
-                        //mActivity.getSupportActionBar().show();
+//                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+//                        mActivity.getSupportActionBar().show();
                     }
                 });
             } else {
@@ -545,8 +544,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         mCurrentAnimator = null;
-                        animatingView.setVisibility(View.GONE);
                         expandView.setVisibility(View.VISIBLE);
+                        animatingView.setVisibility(View.GONE);
 
                         VideoView expandVideoView = (VideoView) expandView;
                         expandVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -608,8 +607,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                 set.start();
                                 mCurrentAnimator = set;
 
-                                //mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
-                                //mActivity.getSupportActionBar().show();
+//                                mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+//                                mActivity.getSupportActionBar().show();
                             }
                         });
 
@@ -621,8 +620,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         mCurrentAnimator = null;
                         animatingView.setVisibility(View.GONE);
 
-                        //mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
-                        //mActivity.getSupportActionBar().show();
+//                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
+//                        mActivity.getSupportActionBar().show();
                     }
                 });
             }
