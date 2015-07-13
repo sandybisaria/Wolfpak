@@ -26,10 +26,4 @@
         android:visibility="gone"
         android:id="@+id/leaderboard_animating_view"/>
 
-    <VideoView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:id="@+id/leaderboard_expanded_video_view"/>
-
 </FrameLayout>

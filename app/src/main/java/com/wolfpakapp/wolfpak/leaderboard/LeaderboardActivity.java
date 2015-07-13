@@ -1,17 +1,21 @@
 package com.wolfpakapp.wolfpak.leaderboard;
 
 import android.app.Activity;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak.R;
@@ -25,11 +29,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class LeaderboardActivity extends ActionBarActivity {
+public class LeaderboardActivity extends AppCompatActivity {
     private List<LeaderboardListItem> listItems;
     private LeaderboardAdapter mAdapter;
 
     private ImageView expandedImageView;
+    private VideoView expandedVideoView;
     private ImageView animatingImageView;
 
     @Override
@@ -37,19 +42,23 @@ public class LeaderboardActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_leaderboard);
 
+        // Instantiate the adapter for the RecyclerView and the ArrayList that stores the posts
         listItems = new ArrayList<>();
         mAdapter = new LeaderboardAdapter(this, listItems);
 
+        // Set up the RecyclerView
         RecyclerView leaderboardRecyclerView =
             (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
         leaderboardRecyclerView.setHasFixedSize(true);
         leaderboardRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         leaderboardRecyclerView.setAdapter(mAdapter);
 
+        // Set up the SwipeRefreshLayout that the RecyclerView is contained in
         final SwipeRefreshLayout mLayout =
-            (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);
+                (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);
         mLayout.setColorSchemeResources(R.color.wolfpak_red);
 
+        // Load the leaderboard posts
         WolfpakRestClient.get("posts/leaderboard/", null, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int i, Header[] headers, byte[] bytes) {
@@ -79,6 +88,7 @@ public class LeaderboardActivity extends ActionBarActivity {
             }
         });
 
+        // Every time the leaderboard is refreshed, load the latest posts
         mLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -131,18 +141,28 @@ public class LeaderboardActivity extends ActionBarActivity {
             }
         });
 
+
         expandedImageView = new ImageView(this);
         expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         expandedImageView.setVisibility(View.GONE);
+
+        expandedVideoView = new VideoView(this);
+        expandedVideoView.setVisibility(View.GONE);
 
         WindowManager manager = getWindowManager();
 
         WindowManager.LayoutParams expandedParams = new WindowManager.LayoutParams();
         expandedParams.height = WindowManager.LayoutParams.MATCH_PARENT;
         expandedParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-        expandedParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        // Allows the expanded View to be drawn over the Action Bar and notification area
+        expandedParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+        // Ensures that the expanded View is positioned over the Action Bar and notification area
+        expandedParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+//        expandedParams.format = PixelFormat.TRANSLUCENT;
+//        expandedParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
 
         manager.addView(expandedImageView, expandedParams);
+        manager.addView(expandedVideoView, expandedParams);
     }
 
     @Override
@@ -169,5 +189,9 @@ public class LeaderboardActivity extends ActionBarActivity {
 
     public ImageView getExpandedImageView() {
         return expandedImageView;
+    }
+
+    public VideoView getExpandedVideoView() {
+        return expandedVideoView;
     }
 }

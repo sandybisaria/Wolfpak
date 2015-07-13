@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -53,8 +54,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
     private ImageView animatingView;
     private Animator mCurrentAnimator;
-    private final Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
-    // TODO Make expanding animation LINEAR!
 
     /**
      * Instantiate a new LeaderboardAdapter with the given List of LeaderboardListItem objects
@@ -203,7 +202,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             private float initialViewX;
             private float initialViewY;
 
-            private int ANIM_DURATION = 350;
+            private final int ANIM_DURATION = 350;
+            private final Interpolator VIEW_COUNT_INTERPOLATOR = new OvershootInterpolator(1.4f);
 
             float lastTouchX = 0;
             float lastTouchY = 0;
@@ -336,7 +336,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         ObjectAnimator yAnim = ObjectAnimator.ofFloat(v, "Y", v.getY(), initialViewY);
                         animatorSet.play(xAnim).with(yAnim);
                         animatorSet.setDuration(ANIM_DURATION);
-                        animatorSet.setInterpolator(INTERPOLATOR);
+                        animatorSet.setInterpolator(VIEW_COUNT_INTERPOLATOR);
 
                         animatorSet.start();
 
@@ -391,14 +391,13 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 final int action = MotionEventCompat.getActionMasked(event);
                 switch (action) {
                     case MotionEvent.ACTION_UP: {
-                        final VideoView expandedVideoView = (VideoView) mActivity.findViewById(R.id.leaderboard_expanded_video_view);
+                        final VideoView expandedVideoView = mActivity.getExpandedVideoView();
                         Uri uri = Uri.parse(listItem.getUrl());
                         expandedVideoView.setVideoURI(uri);
 
                         MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
                         mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
                         Bitmap frame = mRetriever.getFrameAtTime(0);
-
                         animatingView.setImageBitmap(frame);
 
                         animateView(listItemVideoView, expandedVideoView);
@@ -416,7 +415,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          *                   and a VideoView when a VideoView was touched.
          */
         private void animateView(final View initialView, final View expandView) {
-            final int ANIM_DURATION = 1000;
+            final int ANIM_DURATION = 500;
+            final Interpolator THUMBNAIL_EXPANDING_INTERPOLATOR = new LinearInterpolator();
 
             final Rect startBounds = new Rect();
             final Rect finalBounds = new Rect();
@@ -465,7 +465,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     .with(ObjectAnimator.ofFloat(animatingView, View.Y, startBounds.top, finalBounds.top))
                     .with(widthAnimator).with(heightAnimator);
             set.setDuration(ANIM_DURATION);
-            set.setInterpolator(INTERPOLATOR);
+            set.setInterpolator(THUMBNAIL_EXPANDING_INTERPOLATOR);
             if (listItem.isImage()) {
                 set.addListener(new AnimatorListenerAdapter() {
                     @Override
@@ -515,7 +515,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                 .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
                                 .with(widthAnimator).with(heightAnimator);
                         set.setDuration(ANIM_DURATION);
-                        set.setInterpolator(INTERPOLATOR);
+                        set.setInterpolator(THUMBNAIL_EXPANDING_INTERPOLATOR);
                         set.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
@@ -587,7 +587,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                         .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
                                         .with(widthAnimator).with(heightAnimator);
                                 set.setDuration(ANIM_DURATION);
-                                set.setInterpolator(INTERPOLATOR);
+                                set.setInterpolator(THUMBNAIL_EXPANDING_INTERPOLATOR);
                                 set.addListener(new AnimatorListenerAdapter() {
                                     @Override
                                     public void onAnimationEnd(Animator animation) {
