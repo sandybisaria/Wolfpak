@@ -444,6 +444,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             initialView.setAlpha(0f);
 
+            mActivity.getAnimatingContainer().setVisibility(ImageView.VISIBLE);
             animatingView.setVisibility(ImageView.VISIBLE);
 
             ValueAnimator widthAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.width());
@@ -494,6 +495,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                             mCurrentAnimator.cancel();
                         }
 
+                        mActivity.getAnimatingContainer().setVisibility(ImageView.VISIBLE);
                         animatingView.setVisibility(View.VISIBLE);
                         expandView.setVisibility(View.GONE);
 
@@ -527,6 +529,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                             @Override
                             public void onAnimationEnd(Animator animation) {
                                 initialView.setAlpha(1f);
+                                mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
                                 animatingView.setVisibility(View.GONE);
                                 mCurrentAnimator = null;
                             }
@@ -534,6 +537,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                             @Override
                             public void onAnimationCancel(Animator animation) {
                                 initialView.setAlpha(1f);
+                                mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
                                 animatingView.setVisibility(View.GONE);
                                 mCurrentAnimator = null;
                             }
@@ -552,6 +556,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     public void onAnimationEnd(Animator animation) {
                         mCurrentAnimator = null;
                         expandView.setVisibility(View.VISIBLE);
+                        mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
                         animatingView.setVisibility(View.GONE);
 
                         VideoView expandVideoView = (VideoView) expandView;
@@ -562,6 +567,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                     mCurrentAnimator.cancel();
                                 }
 
+                                mActivity.getAnimatingContainer().setVisibility(ImageView.VISIBLE);
                                 animatingView.setVisibility(View.VISIBLE);
                                 expandView.setVisibility(View.GONE);
 
@@ -599,6 +605,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                     @Override
                                     public void onAnimationEnd(Animator animation) {
                                         initialView.setAlpha(1f);
+                                        mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
                                         animatingView.setVisibility(View.GONE);
                                         mCurrentAnimator = null;
                                     }
@@ -606,6 +613,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                     @Override
                                     public void onAnimationCancel(Animator animation) {
                                         initialView.setAlpha(1f);
+                                        mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
                                         animatingView.setVisibility(View.GONE);
                                         mCurrentAnimator = null;
                                     }
@@ -625,6 +633,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     @Override
                     public void onAnimationCancel(Animator animation) {
                         mCurrentAnimator = null;
+                        mActivity.getAnimatingContainer().setVisibility(ImageView.GONE);
                         animatingView.setVisibility(View.GONE);
 
 //                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);

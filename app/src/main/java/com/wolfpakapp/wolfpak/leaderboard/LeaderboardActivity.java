@@ -36,6 +36,7 @@ public class LeaderboardActivity extends AppCompatActivity {
 
     private ImageView expandedImageView;
     private VideoView expandedVideoView;
+    private RelativeLayout animatingContainer;
     private ImageView animatingImageView;
 
     @Override
@@ -150,7 +151,8 @@ public class LeaderboardActivity extends AppCompatActivity {
         expandedVideoView = new VideoView(this);
         expandedVideoView.setVisibility(View.GONE);
 
-        RelativeLayout animatingContainer = new RelativeLayout(this);
+        animatingContainer = new RelativeLayout(this);
+        animatingContainer.setVisibility(View.GONE);
 
         animatingImageView = new ImageView(this);
         animatingImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -215,5 +217,9 @@ public class LeaderboardActivity extends AppCompatActivity {
 
     public ImageView getAnimatingImageView() {
         return animatingImageView;
+    }
+
+    public RelativeLayout getAnimatingContainer() {
+        return animatingContainer;
     }
 }
