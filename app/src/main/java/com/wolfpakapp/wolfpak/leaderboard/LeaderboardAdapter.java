@@ -17,6 +17,7 @@ import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -52,7 +53,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     private SwipeRefreshLayout mLayout;
     private LeaderboardActivity mActivity;
 
-    private ImageView animatingView;
+//    private ImageView animatingView;
     private Animator mCurrentAnimator;
 
     /**
@@ -64,7 +65,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         this.listItems = listItems;
         this.mActivity = mActivity;
         mLayout = (SwipeRefreshLayout) mActivity.findViewById(R.id.leaderboard_swipe_refresh_layout);
-        animatingView = (ImageView) mActivity.findViewById(R.id.leaderboard_animating_view);
+//        animatingView = (ImageView) mActivity.findViewById(R.id.leaderboard_animating_view);
     }
 
     @Override
@@ -375,7 +376,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 final ImageView expandedImageView = mActivity.getExpandedImageView();
 
                 Picasso.with(mActivity).load(listItem.getUrl()).into(expandedImageView);
-                Picasso.with(mActivity).load(listItem.getUrl()).into(animatingView);
+                Picasso.with(mActivity).load(listItem.getUrl()).into(mActivity.getAnimatingImageView());
 
                 animateView(listItemImageView, expandedImageView);
             }
@@ -398,7 +399,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
                         mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
                         Bitmap frame = mRetriever.getFrameAtTime(0);
-                        animatingView.setImageBitmap(frame);
+                        mActivity.getAnimatingImageView().setImageBitmap(frame);
 
                         animateView(listItemVideoView, expandedVideoView);
                     }
@@ -420,16 +421,21 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             final Rect startBounds = new Rect();
             final Rect finalBounds = new Rect();
-            final Point globalOffset = new Point();
+            final Point globalOffset = new Point(0, 0);
+
+            final ImageView animatingView = mActivity.getAnimatingImageView();
 //            final int HEIGHT_OFFSET = 75;
 
 //            mActivity.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
 //            mActivity.getSupportActionBar().hide();
 
             initialView.getGlobalVisibleRect(startBounds);
-            mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
+            expandView.getGlobalVisibleRect(finalBounds);
             startBounds.offset(-globalOffset.x, -globalOffset.y);
             finalBounds.offset(-globalOffset.x, -globalOffset.y);
+
+            Log.d("START", startBounds.toString());
+            Log.d("FINAL", finalBounds.toString());
 
             if (mCurrentAnimator != null) {
                 mCurrentAnimator.cancel();
@@ -438,8 +444,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             initialView.setAlpha(0f);
 
             animatingView.setVisibility(ImageView.VISIBLE);
-            animatingView.setPivotX(0f);
-            animatingView.setPivotY(0f);
 
             ValueAnimator widthAnimator = ValueAnimator.ofInt(previewDimen, finalBounds.width());
             widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -498,6 +502,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                 clipViewToGlobalBounds(animatingView);
                                 animatingView.getLayoutParams().width = (int) animation.getAnimatedValue();
                                 animatingView.requestLayout();
+
                             }
                         });
                         ValueAnimator heightAnimator = ValueAnimator.ofInt(finalBounds.height(), previewDimen);

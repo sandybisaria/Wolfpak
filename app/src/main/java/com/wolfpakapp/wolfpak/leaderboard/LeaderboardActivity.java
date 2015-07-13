@@ -141,13 +141,17 @@ public class LeaderboardActivity extends AppCompatActivity {
             }
         });
 
-
+        // Set up the expanded and animating views
         expandedImageView = new ImageView(this);
         expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         expandedImageView.setVisibility(View.GONE);
 
         expandedVideoView = new VideoView(this);
         expandedVideoView.setVisibility(View.GONE);
+
+        animatingImageView = new ImageView(this);
+        animatingImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        animatingImageView.setVisibility(View.GONE);
 
         WindowManager manager = getWindowManager();
 
@@ -161,8 +165,13 @@ public class LeaderboardActivity extends AppCompatActivity {
 //        expandedParams.format = PixelFormat.TRANSLUCENT;
 //        expandedParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
 
+        WindowManager.LayoutParams animatingParams = new WindowManager.LayoutParams();
+        animatingParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+        animatingParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+
         manager.addView(expandedImageView, expandedParams);
         manager.addView(expandedVideoView, expandedParams);
+        manager.addView(animatingImageView, animatingParams);
     }
 
     @Override
@@ -193,5 +202,9 @@ public class LeaderboardActivity extends AppCompatActivity {
 
     public VideoView getExpandedVideoView() {
         return expandedVideoView;
+    }
+
+    public ImageView getAnimatingImageView() {
+        return animatingImageView;
     }
 }
