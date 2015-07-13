@@ -13,6 +13,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.app.ActionBar;
@@ -468,6 +469,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             set.play(ObjectAnimator.ofFloat(animatingView, View.X, startBounds.left, finalBounds.left))
                     .with(ObjectAnimator.ofFloat(animatingView, View.Y, startBounds.top, finalBounds.top))
                     .with(widthAnimator).with(heightAnimator);
+            set.play(widthAnimator).with(heightAnimator);
             set.setDuration(ANIM_DURATION);
             set.setInterpolator(THUMBNAIL_EXPANDING_INTERPOLATOR);
             if (listItem.isImage()) {

@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -149,6 +150,8 @@ public class LeaderboardActivity extends AppCompatActivity {
         expandedVideoView = new VideoView(this);
         expandedVideoView.setVisibility(View.GONE);
 
+        RelativeLayout animatingContainer = new RelativeLayout(this);
+
         animatingImageView = new ImageView(this);
         animatingImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         animatingImageView.setVisibility(View.GONE);
@@ -165,13 +168,19 @@ public class LeaderboardActivity extends AppCompatActivity {
 //        expandedParams.format = PixelFormat.TRANSLUCENT;
 //        expandedParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
 
-        WindowManager.LayoutParams animatingParams = new WindowManager.LayoutParams();
-        animatingParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
-        animatingParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+        // In order for the animatingImageView to be animate-able, it must be contained in a layout
+        WindowManager.LayoutParams animatingContainerParams = new WindowManager.LayoutParams();
+        animatingContainerParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+        // The layout (and thus the animation) can not be interacted with
+        animatingContainerParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        // Required so that the layout doesn't obscure the Views below the Window
+        animatingContainerParams.format = PixelFormat.TRANSLUCENT;
 
         manager.addView(expandedImageView, expandedParams);
         manager.addView(expandedVideoView, expandedParams);
-        manager.addView(animatingImageView, animatingParams);
+        manager.addView(animatingContainer, animatingContainerParams);
+        animatingContainer.addView(animatingImageView);
     }
 
     @Override
