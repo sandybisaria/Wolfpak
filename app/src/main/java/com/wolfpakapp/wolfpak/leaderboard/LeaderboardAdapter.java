@@ -479,7 +479,16 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     public void onAnimationEnd(Animator animation) {
                         mCurrentAnimator = null;
                         expandView.setVisibility(View.VISIBLE);
-                        animatingView.setVisibility(View.GONE);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                mActivity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                                mActivity.getSupportActionBar().hide();
+                                mActivity.getAnimatingContainer().setVisibility(View.GONE);
+                                animatingView.setVisibility(View.GONE);
+                            }
+                        }, 250);
                     }
 
                     @Override
@@ -497,7 +506,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                         mActivity.getAnimatingContainer().setVisibility(ImageView.VISIBLE);
                         animatingView.setVisibility(View.VISIBLE);
-                        expandView.setVisibility(View.GONE);
 
                         ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
                         widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -519,7 +527,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                             }
                         });
 
-                        AnimatorSet set = new AnimatorSet();
+                        final AnimatorSet set = new AnimatorSet();
                         set.play(ObjectAnimator.ofFloat(animatingView, View.X, finalBounds.left, startBounds.left))
                                 .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
                                 .with(widthAnimator).with(heightAnimator);
@@ -543,8 +551,17 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                             }
                         });
 
-                        set.start();
-                        mCurrentAnimator = set;
+                        mActivity.getWindow().setFlags(0, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                        mActivity.getSupportActionBar().show();
+
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                expandView.setVisibility(View.GONE);
+                                set.start();
+                                mCurrentAnimator = set;
+                            }
+                        }, 250);
 
 //                        mActivity.getWindow().getDecorView().setSystemUiVisibility(0);
 //                        mActivity.getSupportActionBar().show();

@@ -164,9 +164,9 @@ public class LeaderboardActivity extends AppCompatActivity {
         expandedParams.height = WindowManager.LayoutParams.MATCH_PARENT;
         expandedParams.width = WindowManager.LayoutParams.MATCH_PARENT;
         // Allows the expanded View to be drawn over the Action Bar and notification area
-        expandedParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
+//        expandedParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
         // Ensures that the expanded View is positioned over the Action Bar and notification area
-        expandedParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+        expandedParams.flags =  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_FULLSCREEN;
 //        expandedParams.format = PixelFormat.TRANSLUCENT;
 //        expandedParams.gravity = Gravity.BOTTOM | Gravity.CENTER;
 
