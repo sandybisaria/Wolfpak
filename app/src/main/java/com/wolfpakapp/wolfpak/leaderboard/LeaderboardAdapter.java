@@ -12,6 +12,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.media.Image;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -54,10 +55,8 @@ import java.util.List;
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
     private List<LeaderboardListItem> listItems;
     private RecyclerView recyclerView;
-    private SwipeRefreshLayout mLayout;
     private LeaderboardActivity mActivity;
 
-    private ImageView animatingView;
     private Animator mCurrentAnimator;
     private final Interpolator VIEW_COUNT_INTERPOLATOR = new OvershootInterpolator(1.4f);
     private final Interpolator TRANSITION_INTERPOLATOR = new AccelerateDecelerateInterpolator();
@@ -70,8 +69,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     public LeaderboardAdapter(LeaderboardActivity mActivity, List<LeaderboardListItem> listItems) {
         this.listItems = listItems;
         this.mActivity = mActivity;
-        mLayout = (SwipeRefreshLayout) mActivity.findViewById(R.id.leaderboard_swipe_refresh_layout);
-        animatingView = (ImageView) mActivity.findViewById(R.id.leaderboard_animating_view);
     }
 
     @Override
@@ -204,6 +201,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          * appropriate behaviors for said actions.
          */
         private final class ViewCountOnTouchListener implements View.OnTouchListener {
+            private SwipeRefreshLayout mLayout = mActivity.getmLayout();
+
             private int activePointerId = MotionEvent.INVALID_POINTER_ID;
 
             private float initialViewX;
@@ -378,9 +377,9 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         private final class ImageViewOnClickListener implements View.OnClickListener {
             @Override
             public void onClick(final View view) {
-                final ImageView expandedImageView = (ImageView) mActivity.findViewById(R.id.leaderboard_expanded_image_view);
+                final ImageView expandedImageView = mActivity.getExpandedImageView();
                 Picasso.with(mActivity).load(listItem.getUrl()).into(expandedImageView);
-                Picasso.with(mActivity).load(listItem.getUrl()).into(animatingView);
+                Picasso.with(mActivity).load(listItem.getUrl()).into(mActivity.getAnimatingView());
 
                 animateView(view, expandedImageView);
             }
@@ -396,14 +395,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 final int action = MotionEventCompat.getActionMasked(event);
                 switch (action) {
                     case MotionEvent.ACTION_UP: {
-                        final VideoView expandedVideoView = (VideoView) mActivity.findViewById(R.id.leaderboard_expanded_video_view);
+                        final VideoView expandedVideoView = mActivity.getExpandedVideoView();
                         Uri uri = Uri.parse(listItem.getUrl());
                         expandedVideoView.setVideoURI(uri);
 
                         MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
                         mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
                         Bitmap frame = mRetriever.getFrameAtTime(0);
-                        animatingView.setImageBitmap(frame);
+                        mActivity.getAnimatingView().setImageBitmap(frame);
 
                         animateView(listItemVideoView, expandedVideoView);
                     }
@@ -420,6 +419,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          *                   and a VideoView when a VideoView was touched.
          */
         private void animateView(final View initialView, final View expandView) {
+            final ImageView animatingView = mActivity.getAnimatingView();
+
             animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
             expandView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
 

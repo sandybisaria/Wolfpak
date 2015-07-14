@@ -8,7 +8,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wolfpakapp.wolfpak.R;
@@ -24,8 +29,13 @@ import java.util.List;
 
 public class LeaderboardActivity extends Activity {
     private List<LeaderboardListItem> listItems;
-    private List<Integer> listItemPostIds;
     private LeaderboardAdapter mAdapter;
+
+    private FrameLayout baseLayout;
+    private SwipeRefreshLayout mLayout;
+    private ImageView animatingView;
+    private ImageView expandedImageView;
+    private VideoView expandedVideoView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +46,28 @@ public class LeaderboardActivity extends Activity {
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
         listItems = new ArrayList<>();
-        listItemPostIds = new ArrayList<>();
         mAdapter = new LeaderboardAdapter(this, listItems);
+
+        baseLayout = (FrameLayout) findViewById(R.id.leaderboard_frame_layout);
+
+        animatingView = new ImageView(this);
+        animatingView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        animatingView.setVisibility(View.GONE);
+        baseLayout.addView(animatingView);
+
+        ViewGroup.LayoutParams expandedParams = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+        expandedImageView = new ImageView(this);
+        expandedImageView.setLayoutParams(expandedParams);
+        expandedImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        expandedImageView.setVisibility(View.GONE);
+        baseLayout.addView(expandedImageView);
+
+        expandedVideoView = new VideoView(this);
+        expandedVideoView.setLayoutParams(expandedParams);
+        expandedVideoView.setVisibility(View.GONE);
+        baseLayout.addView(expandedVideoView);
 
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -51,8 +81,7 @@ public class LeaderboardActivity extends Activity {
         leaderboardRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         leaderboardRecyclerView.setAdapter(mAdapter);
 
-        final SwipeRefreshLayout mLayout =
-            (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);
+        mLayout = (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);
         mLayout.setPadding(0, result, 0, 0);
         mLayout.setProgressViewOffset(true, 0, result * 2);
 
@@ -104,6 +133,8 @@ public class LeaderboardActivity extends Activity {
                                 int originalVoteCount = listItemObject.optInt("likes");
                                 String mediaUrl = listItemObject.optString("media_url");
 
+                                // TODO Only works when existing posts are modified
+                                // TODO Allow posts to be added/removed on refresh!
                                 freshListItems.add(new LeaderboardListItem(id, handle, originalVoteCount, mediaUrl, isImage));
                                 for (LeaderboardListItem freshListItem : freshListItems) {
                                     for (LeaderboardListItem currentListItem : listItems) {
@@ -158,5 +189,21 @@ public class LeaderboardActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public ImageView getAnimatingView() {
+        return animatingView;
+    }
+
+    public ImageView getExpandedImageView() {
+        return expandedImageView;
+    }
+
+    public VideoView getExpandedVideoView() {
+        return expandedVideoView;
+    }
+
+    public SwipeRefreshLayout getmLayout() {
+        return mLayout;
     }
 }
