@@ -3,6 +3,7 @@ package com.wolfpakapp.wolfpak.leaderboard;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class LeaderboardActivity extends Activity {
+public class LeaderboardActivity extends AppCompatActivity {
     private List<LeaderboardListItem> listItems;
     private LeaderboardAdapter mAdapter;
 
@@ -74,6 +75,7 @@ public class LeaderboardActivity extends Activity {
         if (resourceId > 0) {
             result = getResources().getDimensionPixelSize(resourceId);
         }
+        result += getResources().getDimensionPixelSize(R.dimen.abc_action_bar_default_height_material);
 
         RecyclerView leaderboardRecyclerView =
             (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
@@ -83,7 +85,7 @@ public class LeaderboardActivity extends Activity {
 
         mLayout = (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);
         mLayout.setPadding(0, result, 0, 0);
-        mLayout.setProgressViewOffset(true, 0, result * 2);
+        mLayout.setProgressViewOffset(true, 0, result);
 
         WolfpakRestClient.get("posts/leaderboard/", null, new AsyncHttpResponseHandler() {
             @Override

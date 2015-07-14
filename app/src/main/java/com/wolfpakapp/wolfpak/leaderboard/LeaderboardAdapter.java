@@ -364,8 +364,10 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             GradientDrawable bg = (GradientDrawable) listItemViewCountTextView.getResources()
                     .getDrawable(R.drawable.leaderboard_item_view_count_background);
             int statusColor = status.getStatusColor(mActivity);
-            bg.setColor(statusColor);
-            listItemViewCountTextView.setBackground(bg);
+            if (bg != null) {
+                bg.setColor(statusColor);
+                listItemViewCountTextView.setBackground(bg);
+            }
             listItemViewCountTextView.setText(Integer.toString(listItem.getUpdatedVoteCount()));
             listItemViewCountTextView.invalidate();
         }
