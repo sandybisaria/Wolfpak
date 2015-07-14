@@ -7,6 +7,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -30,14 +31,25 @@ public class LeaderboardActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_leaderboard);
 
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
         listItems = new ArrayList<>();
         mAdapter = new LeaderboardAdapter(this, listItems);
+
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
 
         RecyclerView leaderboardRecyclerView =
             (RecyclerView) findViewById(R.id.leaderboard_recycler_view);
         leaderboardRecyclerView.setHasFixedSize(true);
         leaderboardRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         leaderboardRecyclerView.setAdapter(mAdapter);
+        leaderboardRecyclerView.setPadding(0, result, 0, 0);
 
         final SwipeRefreshLayout mLayout =
             (SwipeRefreshLayout) findViewById(R.id.leaderboard_swipe_refresh_layout);

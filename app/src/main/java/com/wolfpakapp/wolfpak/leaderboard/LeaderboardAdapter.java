@@ -5,8 +5,9 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
@@ -15,16 +16,19 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.app.ActionBar;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -52,7 +56,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
     private ImageView animatingView;
     private Animator mCurrentAnimator;
-    private final Interpolator INTERPOLATOR = new OvershootInterpolator(1.4f);
+    private final Interpolator VIEW_COUNT_INTERPOLATOR = new OvershootInterpolator(1.4f);
+    private final Interpolator TRANSITION_INTERPOLATOR = new LinearInterpolator();
 
     /**
      * Instantiate a new LeaderboardAdapter with the given List of LeaderboardListItem objects
@@ -334,7 +339,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         ObjectAnimator yAnim = ObjectAnimator.ofFloat(v, "Y", v.getY(), initialViewY);
                         animatorSet.play(xAnim).with(yAnim);
                         animatorSet.setDuration(ANIM_DURATION);
-                        animatorSet.setInterpolator(INTERPOLATOR);
+                        animatorSet.setInterpolator(VIEW_COUNT_INTERPOLATOR);
 
                         animatorSet.start();
 
@@ -412,12 +417,13 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          *                   and a VideoView when a VideoView was touched.
          */
         private void animateView(final View initialView, final View expandView) {
+            expandView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+
             final int ANIM_DURATION = 1000;
 
             final Rect startBounds = new Rect();
             final Rect finalBounds = new Rect();
             final Point globalOffset = new Point();
-//            final int HEIGHT_OFFSET = 75;
 
             initialView.getGlobalVisibleRect(startBounds);
             mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
@@ -427,8 +433,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             if (mCurrentAnimator != null) {
                 mCurrentAnimator.cancel();
             }
-
-            initialView.setAlpha(0f);
 
             animatingView.setVisibility(ImageView.VISIBLE);
             animatingView.setPivotX(0f);
@@ -458,7 +462,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     .with(ObjectAnimator.ofFloat(animatingView, View.Y, startBounds.top, finalBounds.top))
                     .with(widthAnimator).with(heightAnimator);
             set.setDuration(ANIM_DURATION);
-            set.setInterpolator(INTERPOLATOR);
+            set.setInterpolator(TRANSITION_INTERPOLATOR);
             if (listItem.isImage()) {
                 set.addListener(new AnimatorListenerAdapter() {
                     @Override
@@ -508,18 +512,16 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                 .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
                                 .with(widthAnimator).with(heightAnimator);
                         set.setDuration(ANIM_DURATION);
-                        set.setInterpolator(INTERPOLATOR);
+                        set.setInterpolator(TRANSITION_INTERPOLATOR);
                         set.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
-                                initialView.setAlpha(1f);
                                 animatingView.setVisibility(View.GONE);
                                 mCurrentAnimator = null;
                             }
 
                             @Override
                             public void onAnimationCancel(Animator animation) {
-                                initialView.setAlpha(1f);
                                 animatingView.setVisibility(View.GONE);
                                 mCurrentAnimator = null;
                             }
@@ -577,18 +579,16 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                         .with(ObjectAnimator.ofFloat(animatingView, View.Y, finalBounds.top, startBounds.top))
                                         .with(widthAnimator).with(heightAnimator);
                                 set.setDuration(ANIM_DURATION);
-                                set.setInterpolator(INTERPOLATOR);
+                                set.setInterpolator(TRANSITION_INTERPOLATOR);
                                 set.addListener(new AnimatorListenerAdapter() {
                                     @Override
                                     public void onAnimationEnd(Animator animation) {
-                                        initialView.setAlpha(1f);
                                         animatingView.setVisibility(View.GONE);
                                         mCurrentAnimator = null;
                                     }
 
                                     @Override
                                     public void onAnimationCancel(Animator animation) {
-                                        initialView.setAlpha(1f);
                                         animatingView.setVisibility(View.GONE);
                                         mCurrentAnimator = null;
                                     }
