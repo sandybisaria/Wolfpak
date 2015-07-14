@@ -15,6 +15,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.media.Image;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -183,6 +184,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                 listItemVideoView = new VideoView(mActivity);
                 Uri uri = Uri.parse(listItem.getUrl());
                 listItemVideoView.setVideoURI(uri);
+
+                listItemVideoView.setBackgroundResource(R.drawable.wolfpaktest);
 
                 listItemVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
@@ -401,12 +404,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                         Uri uri = Uri.parse(listItem.getUrl());
                         expandedVideoView.setVideoURI(uri);
 
-                        MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
-                        mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
-                        Bitmap frame = mRetriever.getFrameAtTime(0);
-                        mActivity.getAnimatingView().setImageBitmap(frame);
+//                        MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
+//                        mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
+//                        Bitmap frame = mRetriever.getFrameAtTime(0);
+                        mActivity.getAnimatingView().setBackgroundColor(Color.BLACK);
 
                         animateView(listItemVideoView, expandedVideoView);
+
+                        break;
                     }
                 }
 
@@ -430,13 +435,9 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             final Rect startBounds = new Rect();
             final Rect finalBounds = new Rect();
-//            final Point globalOffset = new Point();
 
             initialView.getGlobalVisibleRect(startBounds);
             mActivity.getWindow().getDecorView().getGlobalVisibleRect(finalBounds);
-//            expandView.getGlobalVisibleRect(finalBounds, globalOffset);
-//            startBounds.offset(-globalOffset.x, -globalOffset.y);
-//            finalBounds.offset(-globalOffset.x, -globalOffset.y);
 
             if (mCurrentAnimator != null) {
                 mCurrentAnimator.cancel();
@@ -544,7 +545,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         mCurrentAnimator = null;
-                        animatingView.setVisibility(View.GONE);
                         expandView.setVisibility(View.VISIBLE);
 
                         VideoView expandVideoView = (VideoView) expandView;
@@ -555,13 +555,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                                     mCurrentAnimator.cancel();
                                 }
 
-                                animatingView.setVisibility(View.VISIBLE);
-                                expandView.setVisibility(View.GONE);
+//                                MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
+//                                mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
+//                                Bitmap frame = mRetriever.getFrameAtTime();
+//                                animatingView.setImageBitmap(frame);
 
-                                MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
-                                mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
-                                Bitmap frame = mRetriever.getFrameAtTime();
-                                animatingView.setImageBitmap(frame);
+                                animatingView.setVisibility(View.VISIBLE);
 
                                 ValueAnimator widthAnimator = ValueAnimator.ofInt(finalBounds.width(), previewDimen);
                                 widthAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -604,10 +603,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
                                 set.start();
                                 mCurrentAnimator = set;
+                                expandView.setVisibility(View.GONE);
                             }
                         });
 
                         expandVideoView.start();
+                        animatingView.setVisibility(View.GONE);
                     }
 
                     @Override
