@@ -5,35 +5,24 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.app.ActionBar;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
-import android.media.Image;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -41,7 +30,6 @@ import com.squareup.picasso.Picasso;
 import com.wolfpakapp.wolfpak.R;
 import com.wolfpakapp.wolfpak.WolfpakLikeClient;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -133,8 +121,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
         private LinearLayout contentLayout;
 
-        private ImageView listItemImageView;
-        private VideoView listItemVideoView;
+        private ImageView listItemThumbnailView;
 
         private final int previewDimen;
 
@@ -170,32 +157,21 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
             contentLayout.removeAllViews();
 
-            // Load the content into the appropriate thumnbnail view and add it to the layout
+            // Load the appropriate image into the thumbnail
+            listItemThumbnailView = new ImageView(mActivity);
+            listItemThumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            listItemThumbnailView.setCropToPadding(true);
             if (listItem.isImage()) {
-                listItemImageView = new ImageView(mActivity);
-                listItemImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                listItemImageView.setCropToPadding(true);
-                Picasso.with(mActivity).load(listItem.getUrl()).into(listItemImageView);
-
-                listItemImageView.setOnClickListener(new ImageViewOnClickListener());
-
-                contentLayout.addView(listItemImageView);
+                Picasso.with(mActivity).load(listItem.getUrl()).into(listItemThumbnailView);
             } else {
-                listItemVideoView = new VideoView(mActivity);
-                Uri uri = Uri.parse(listItem.getUrl());
-                listItemVideoView.setVideoURI(uri);
-
-                listItemVideoView.setBackgroundResource(R.drawable.wolfpaktest);
-
-                listItemVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mp) {
-                        listItemVideoView.setOnTouchListener(new VideoViewOnTouchListener());
-                    }
-                });
-
-                contentLayout.addView(listItemVideoView);
+                // TODO Replace with actual video thumbnail (from server)
+                Picasso.with(mActivity).load(R.drawable.leaderboard_video_thumbnail)
+                        .into(listItemThumbnailView);
             }
+
+            listItemThumbnailView.setOnClickListener(new ThumbnailOnClickListener());
+
+            contentLayout.addView(listItemThumbnailView);
         }
 
         /**
@@ -376,46 +352,26 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         }
 
         /**
-         * The ImageViewOnClickListener encapsulates the callback when the ImageView is clicked.
-         * This is intended for the thumbnail images in each list item.
+         * Callback for when the thumbnail is clicked. Causes the image/video to expand.
          */
-        private final class ImageViewOnClickListener implements View.OnClickListener {
+        private final class ThumbnailOnClickListener implements View.OnClickListener {
             @Override
-            public void onClick(final View view) {
-                final ImageView expandedImageView = mActivity.getExpandedImageView();
-                Picasso.with(mActivity).load(listItem.getUrl()).into(expandedImageView);
-                Picasso.with(mActivity).load(listItem.getUrl()).into(mActivity.getAnimatingView());
+            public void onClick(View v) {
+                if (listItem.isImage()) {
+                    final ImageView expandedImageView = mActivity.getExpandedImageView();
+                    Picasso.with(mActivity).load(listItem.getUrl()).into(expandedImageView);
+                    Picasso.with(mActivity).load(listItem.getUrl()).into(mActivity.getAnimatingView());
 
-                animateView(view, expandedImageView);
-            }
-        }
+                    animateView(listItemThumbnailView, expandedImageView);
+                } else {
+                    final VideoView expandedVideoView = mActivity.getExpandedVideoView();
+                    Uri uri = Uri.parse(listItem.getUrl());
+                    expandedVideoView.setVideoURI(uri);
 
-        /**
-         * The VideoViewOnTouchListener encapsulates the callback when the VideoView is clicked.
-         * This is intended for the thumbnail videos in each list item.
-         */
-        private final class VideoViewOnTouchListener implements View.OnTouchListener {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                final int action = MotionEventCompat.getActionMasked(event);
-                switch (action) {
-                    case MotionEvent.ACTION_UP: {
-                        final VideoView expandedVideoView = mActivity.getExpandedVideoView();
-                        Uri uri = Uri.parse(listItem.getUrl());
-                        expandedVideoView.setVideoURI(uri);
+                    mActivity.getAnimatingView().setBackgroundColor(Color.BLACK);
 
-//                        MediaMetadataRetriever mRetriever = new MediaMetadataRetriever();
-//                        mRetriever.setDataSource(listItem.getUrl(), new HashMap<String, String>());
-//                        Bitmap frame = mRetriever.getFrameAtTime(0);
-                        mActivity.getAnimatingView().setBackgroundColor(Color.BLACK);
-
-                        animateView(listItemVideoView, expandedVideoView);
-
-                        break;
-                    }
+                    animateView(listItemThumbnailView, expandedVideoView);
                 }
-
-                return true;
             }
         }
 
