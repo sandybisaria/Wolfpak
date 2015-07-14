@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.ActionBar;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -17,11 +18,13 @@ import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
@@ -57,7 +60,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     private ImageView animatingView;
     private Animator mCurrentAnimator;
     private final Interpolator VIEW_COUNT_INTERPOLATOR = new OvershootInterpolator(1.4f);
-    private final Interpolator TRANSITION_INTERPOLATOR = new LinearInterpolator();
+    private final Interpolator TRANSITION_INTERPOLATOR = new AccelerateDecelerateInterpolator();
 
     /**
      * Instantiate a new LeaderboardAdapter with the given List of LeaderboardListItem objects
@@ -417,18 +420,20 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
          *                   and a VideoView when a VideoView was touched.
          */
         private void animateView(final View initialView, final View expandView) {
+            animatingView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
             expandView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
 
-            final int ANIM_DURATION = 1000;
+            final int ANIM_DURATION = 900;
 
             final Rect startBounds = new Rect();
             final Rect finalBounds = new Rect();
-            final Point globalOffset = new Point();
+//            final Point globalOffset = new Point();
 
             initialView.getGlobalVisibleRect(startBounds);
-            mActivity.findViewById(R.id.leaderboard_frame_layout).getGlobalVisibleRect(finalBounds, globalOffset);
-            startBounds.offset(-globalOffset.x, -globalOffset.y);
-            finalBounds.offset(-globalOffset.x, -globalOffset.y);
+            mActivity.getWindow().getDecorView().getGlobalVisibleRect(finalBounds);
+//            expandView.getGlobalVisibleRect(finalBounds, globalOffset);
+//            startBounds.offset(-globalOffset.x, -globalOffset.y);
+//            finalBounds.offset(-globalOffset.x, -globalOffset.y);
 
             if (mCurrentAnimator != null) {
                 mCurrentAnimator.cancel();
@@ -468,8 +473,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         mCurrentAnimator = null;
-                        animatingView.setVisibility(View.GONE);
                         expandView.setVisibility(View.VISIBLE);
+                        animatingView.setVisibility(View.GONE);
                     }
 
                     @Override
